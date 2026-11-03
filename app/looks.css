@@ -103,6 +103,11 @@ html:has(.desk[data-theme="midnight"]) {
     0 1px 1px rgba(40, 40, 40, 0.12),
     0 16px 34px -12px rgba(40, 50, 60, 0.38);
 }
+/* a short letter is still a whole sheet, as tall as it unfolded, with both creases on it */
+.desk:not([data-book]) .sheet-content {
+  min-height: calc(var(--panel) * 3);
+}
+
 /* one soft light from above: a contact shadow, then a soft one that falls below */
 .desk {
   --shadow-contact: 0 1px 1px rgba(0, 0, 0, 0.3);

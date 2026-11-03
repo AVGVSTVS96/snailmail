@@ -37,6 +37,7 @@
     filter: none !important;
   }
   .sheet-content {
+    min-height: 0 !important;
     padding: 0.6in 0.9in;
     box-decoration-break: clone;
   }
