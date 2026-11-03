@@ -73,18 +73,18 @@ html:has(.desk[data-theme="midnight"]) {
     --letter-lh: 32px;
   }
 }
-/* the half-folded Duo's book pages are phone-wide */
-@media (min-width: 600px) and (min-height: 480px) and (horizontal-viewport-segments: 2) {
-  .desk[data-face="typewriter"] {
+/* book pages are phone-wide */
+@media screen {
+  .desk[data-book][data-face="typewriter"] {
     --letter-size: 15px;
     --letter-lh: 25px;
   }
-  .desk[data-face="book"],
-  .desk[data-face="letterpress"] {
+  .desk[data-book][data-face="book"],
+  .desk[data-book][data-face="letterpress"] {
     --letter-size: 19px;
     --letter-lh: 29px;
   }
-  .desk[data-face="clean"] {
+  .desk[data-book][data-face="clean"] {
     --letter-size: 18px;
     --letter-lh: 28px;
   }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { flushSync } from "react-dom";
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Theme } from "@/lib/theme";
+import { watchFold } from "@/lib/fold";
 import { tap } from "@/lib/haptics";
 import { deskProps } from "@/lib/texture";
 import { type Address, Envelope } from "./envelope";
@@ -29,7 +30,12 @@ export type Delivery = {
 const holdMs = 900;
 const ringLength = 2 * Math.PI * 46;
 
-const bookQuery = "(min-width: 600px) and (min-height: 480px) and (horizontal-viewport-segments: 2)";
+const halfFoldedQuery = "(min-width: 600px) and (min-height: 480px) and (horizontal-viewport-segments: 2)";
+const wideQuery = "(min-width: 600px) and (min-height: 480px) and (orientation: landscape)";
+const foldableKey = "snailmail:foldable";
+
+const autoDelays: Partial<Record<Stage, number>> = { front: 450, back: 900, open: 1350 };
+const refoldMs = 950;
 
 function useMedia(query: string) {
   return useSyncExternalStore(
@@ -64,7 +70,12 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   const [run, setRun] = useState(0);
   const [holding, setHolding] = useState(false);
   const reduced = useMedia("(prefers-reduced-motion: reduce)");
-  const book = useMedia(bookQuery);
+  const halfFolded = useMedia(halfFoldedQuery);
+  const wide = useMedia(wideQuery);
+  const [opening, setOpening] = useState(false);
+  const [refolding, setRefolding] = useState(false);
+  const [resealed, setResealed] = useState(false);
+  const [unfoldedHere, setUnfoldedHere] = useState(false);
   const [spreads, setSpreads] = useState(1);
   const ring = useRef<SVGCircleElement>(null);
   const envelopeLetter = useRef<HTMLDivElement>(null);
@@ -81,12 +92,21 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     () => false,
   );
 
+  const foldableBefore = useSyncExternalStore(
+    subscribeNever,
+    () => localStorage.getItem(foldableKey) !== null,
+    () => false,
+  );
+
+  const foldable = unfoldedHere || foldableBefore;
+  const book = halfFolded || (foldable && wide);
+
   useEffect(() => {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme.surface);
   }, [theme.surface]);
 
   const autoUnfold = useEffectEvent(() => unfold());
-  const finishUnfold = useEffectEvent(() => change(() => setStage("read"), reduced || book));
+  const finishUnfold = useEffectEvent(() => (refolding ? reseal() : change(() => setStage("read"), reduced || book)));
 
   useEffect(() => {
     if (stage !== "open") return;
@@ -107,10 +127,29 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
 
   useEffect(() => {
     if (stage !== "unfold") return;
-    const timer = setTimeout(finishUnfold, reduced ? 350 : 1550);
+    const timer = setTimeout(finishUnfold, reduced ? 350 : refolding ? refoldMs : 1550);
 
     return () => clearTimeout(timer);
-  }, [stage, reduced]);
+  }, [stage, reduced, refolding]);
+
+  const onFold = useEffectEvent((fold: "unfold" | "fold") => (fold === "unfold" ? openByUnfolding() : refold()));
+
+  useEffect(() => watchFold(onFold), []);
+
+  const autoStep = useEffectEvent(() => {
+    if (stage === "front") change(() => setStage("back"));
+    else if (stage === "back") crack();
+    else if (stage === "open") unfold();
+  });
+
+  useEffect(() => {
+    const delay = autoDelays[stage];
+
+    if (!opening || delay === undefined) return;
+    const timer = setTimeout(autoStep, reduced ? 350 : delay);
+
+    return () => clearTimeout(timer);
+  }, [opening, stage, reduced]);
 
   useEffect(() => {
     if (stage !== "read") return;
@@ -147,7 +186,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     const from = source.current;
     const target = fold.current?.querySelector(".panel-mid")?.getBoundingClientRect();
 
-    if (stage !== "unfold" || !from || !target || !fold.current || reduced) return;
+    if (stage !== "unfold" || refolding || !from || !target || !fold.current || reduced) return;
     const scaleX = from.width / target.width;
     const scaleY = from.height / target.height;
     const x = from.left + from.width / 2 - (target.left + target.width / 2);
@@ -161,7 +200,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     fold.current
       .querySelector(".env-letter-note")
       ?.animate([{ transform: `scaleY(${scaleX / scaleY})` }, { transform: "none" }], timing);
-  }, [stage, reduced]);
+  }, [stage, reduced, refolding]);
 
   useEffect(() => {
     const content = track.current?.querySelector(".sheet-content");
@@ -208,7 +247,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
 
   function change(update: () => void, crossfade = reduced) {
     if (!crossfade || !("startViewTransition" in document)) return update();
-    document.startViewTransition(() => flushSync(update));
+    document.startViewTransition(() => flushSync(update)).ready.catch(() => {});
   }
 
   function fillRing(full: boolean) {
@@ -270,12 +309,49 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     });
   }
 
+  function openByUnfolding() {
+    localStorage.setItem(foldableKey, "1");
+    setUnfoldedHere(true);
+
+    if (refolding) return reseal(true);
+
+    if (stage !== "front" && stage !== "back" && stage !== "open") return;
+    void load();
+    setOpening(true);
+  }
+
+  function refold() {
+    setOpening(false);
+
+    if (stage === "front" || stage === "back" || refolding) return;
+
+    if (stage === "open") return reseal();
+    window.scrollTo({ top: 0 });
+    source.current = null;
+    change(() => {
+      setRefolding(true);
+      setStage("unfold");
+    }, true);
+  }
+
+  function reseal(thenOpen = false) {
+    setRefolding(false);
+    setResealed(!thenOpen);
+    setOpening(thenOpen);
+    change(() => {
+      setStage("back");
+      setRun((n) => n + 1);
+    }, true);
+  }
+
   function skip() {
     withWords(() => change(() => setStage("read")));
   }
 
   function again() {
     window.scrollTo({ top: 0 });
+    setResealed(false);
+    setOpening(false);
     change(() => {
       setStage("front");
       setRun((n) => n + 1);
@@ -288,21 +364,22 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   const ritual = stage !== "read";
   const label = stage === "front" ? delivery.arrived : stage === "back" ? "SEALED WITH WAX" : "";
 
-  const hint =
-    stage === "front"
+  const hint = opening
+    ? []
+    : stage === "front"
       ? ["Tap to turn it over", delivery.signedFrom]
       : stage === "back"
         ? holding
           ? ["Keep holding…"]
           : reduced
-            ? ["Tap the seal to break it"]
-            : ["Press and hold the seal", "it breaks the way real wax does"]
+            ? ["Tap the seal to break it", foldable ? "or unfold your phone" : ""]
+            : ["Press and hold the seal", foldable ? "or unfold your phone" : "it breaks the way real wax does"]
         : stage === "open"
           ? ["Tap the letter to unfold it"]
           : [];
 
   return (
-    <main className="desk" {...deskProps(theme)} data-stage={stage}>
+    <main className="desk" {...deskProps(theme)} data-stage={stage} data-book={book || undefined}>
       {ritual && (
         <section
           ref={scene}
@@ -310,6 +387,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
           data-flipped={flipped || undefined}
           data-opened={opened || undefined}
           data-holding={holding || undefined}
+          data-resealed={resealed || undefined}
         >
           {readBefore && stage !== "unfold" && (
             <button type="button" className="skip" onClick={skip}>
@@ -406,7 +484,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
       {(stage === "unfold" || stage === "read") && letter && (
         <section className="reading">
           {stage === "unfold" ? (
-            <div className="fold" ref={fold} aria-hidden>
+            <div className="fold" ref={fold} aria-hidden data-refolding={refolding || undefined}>
               {(["top", "mid", "bot"] as const).map((panel, i) => (
                 <div key={panel} className={`panel panel-${panel}`}>
                   <div className="face face-front">

@@ -488,6 +488,30 @@ html:has(.desk) {
   transition-delay: 600ms;
 }
 
+/* Folding the phone shut: the bottom third folds up, the top folds down over it, then the envelope comes back face down and the seal presses shut */
+
+.fold[data-refolding] {
+  animation: none;
+}
+.fold[data-refolding] :is(.panel-top, .panel-bot, .face),
+.fold[data-refolding] .face::after {
+  animation-direction: reverse;
+}
+.fold[data-refolding] :is(.panel-bot, .panel-bot .face),
+.fold[data-refolding] .panel-bot .face::after {
+  animation-delay: 0ms;
+}
+.fold[data-refolding] :is(.panel-top, .panel-top .face),
+.fold[data-refolding] .panel-top .face::after {
+  animation-delay: 220ms;
+}
+.ritual[data-resealed] :is(.env-flipper, .env-front, .env-back) {
+  animation-delay: -700ms;
+}
+.ritual[data-resealed] .seal-whole {
+  animation: press 600ms var(--spring-pop) 900ms both;
+}
+
 /* Reading */
 
 .reading {
@@ -672,17 +696,10 @@ html:has(.desk) {
     1px 1px 0 rgba(0, 0, 0, 0.24);
 }
 
-/* spread: the open Duo half-folded like a book. Two facing pages, one per half, the letter flowing across */
+/* spread: the open Duo half-folded like a book. The envelope sits in the right half, its words in the left */
 @media (min-width: 600px) and (min-height: 480px) and (horizontal-viewport-segments: 2) {
   .desk {
-    --half: env(viewport-segment-width 0 0, 50vw);
-    --page-m: 36px;
-    --page-pad: 36px;
-    --book-top: max(28px, calc(env(safe-area-inset-top) + 20px));
-    --book-bottom: max(28px, calc(env(safe-area-inset-bottom) + 6px));
-    --env-w: min(400px, calc(var(--half) - 80px));
-    --letter-size: 22px;
-    --letter-lh: 34px;
+    --env-w: min(400px, calc(env(viewport-segment-width 0 0, 50vw) - 80px));
   }
   .ritual {
     grid-template-columns: 1fr 1fr;
@@ -710,79 +727,94 @@ html:has(.desk) {
     align-items: flex-start;
     text-align: left;
   }
-  .reading {
-    padding-top: 0;
+}
+
+/* The letter as a book, half-folded or opened flat by unfolding: two facing pages, one per half, flowing across */
+@media screen {
+  .desk[data-book] {
+    --half: env(viewport-segment-width 0 0, 50vw);
+    --page-m: 36px;
+    --page-pad: 36px;
+    --book-top: max(28px, calc(env(safe-area-inset-top) + 20px));
+    --book-bottom: max(28px, calc(env(safe-area-inset-bottom) + 6px));
+    --letter-size: 22px;
+    --letter-lh: 34px;
   }
-  .sheet {
-    width: 100vw;
-    height: 100dvh;
-    overflow: auto hidden;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    background: none;
-    box-shadow: none;
-  }
-  .sheet::before,
-  .sheet::after {
-    display: none;
-  }
-  .book {
-    position: relative;
-    width: calc(var(--spreads) * 100vw);
-    height: 100%;
-  }
-  .book-page {
-    position: absolute;
-    top: var(--book-top);
-    bottom: var(--book-bottom);
-    left: calc(var(--i) * var(--half) + var(--page-m));
-    width: calc(var(--half) - 2 * var(--page-m));
-    background-color: var(--paper);
-    background-image: var(--paper-bg);
-    box-shadow:
-      0 1px 1px rgba(0, 0, 0, 0.3),
-      0 16px 30px rgba(0, 0, 0, 0.4);
-  }
-  .book-page::after {
-    content: attr(data-folio);
-    position: absolute;
-    bottom: 14px;
-    width: 100%;
-    font-family: var(--font-geist-mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-align: center;
-    color: var(--ink-soft);
-    opacity: 0.7;
-  }
-  .book-page:nth-child(even)::before {
-    content: "";
-    position: absolute;
-    top: calc(-1 * var(--book-top));
-    bottom: calc(-1 * var(--book-bottom));
-    left: calc(-1 * var(--page-m) - 60px);
-    width: 120px;
-    z-index: -1;
-    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.28) 50%, transparent);
-  }
-  .book-page:nth-child(odd) {
-    scroll-snap-align: start;
-    scroll-margin-left: var(--page-m);
-  }
-  .book .sheet-content {
-    position: absolute;
-    top: var(--book-top);
-    left: var(--page-m);
-    width: calc(2 * var(--half) - 2 * var(--page-m));
-    height: calc(100dvh - var(--book-top) - var(--book-bottom));
-    padding: 34px var(--page-pad) 44px;
-    column-count: 2;
-    column-gap: calc(2 * (var(--page-m) + var(--page-pad)));
-    column-fill: auto;
-  }
-  .book .sheet-sign {
-    break-inside: avoid;
+  :where(.desk[data-book]) {
+    .reading {
+      padding-top: 0;
+    }
+    .sheet {
+      width: 100vw;
+      height: 100dvh;
+      overflow: auto hidden;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      background: none;
+      box-shadow: none;
+    }
+    .sheet::before,
+    .sheet::after {
+      display: none;
+    }
+    .book {
+      position: relative;
+      width: calc(var(--spreads) * 100vw);
+      height: 100%;
+    }
+    .book-page {
+      position: absolute;
+      top: var(--book-top);
+      bottom: var(--book-bottom);
+      left: calc(var(--i) * var(--half) + var(--page-m));
+      width: calc(var(--half) - 2 * var(--page-m));
+      background-color: var(--paper);
+      background-image: var(--paper-bg);
+      box-shadow:
+        0 1px 1px rgba(0, 0, 0, 0.3),
+        0 16px 30px rgba(0, 0, 0, 0.4);
+    }
+    .book-page::after {
+      content: attr(data-folio);
+      position: absolute;
+      bottom: 14px;
+      width: 100%;
+      font-family: var(--font-geist-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-align: center;
+      color: var(--ink-soft);
+      opacity: 0.7;
+    }
+    .book-page:nth-child(even)::before {
+      content: "";
+      position: absolute;
+      top: calc(-1 * var(--book-top));
+      bottom: calc(-1 * var(--book-bottom));
+      left: calc(-1 * var(--page-m) - 60px);
+      width: 120px;
+      z-index: -1;
+      background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.28) 50%, transparent);
+    }
+    .book-page:nth-child(odd) {
+      scroll-snap-align: start;
+      scroll-margin-left: var(--page-m);
+    }
+    .book .sheet-content {
+      position: absolute;
+      top: var(--book-top);
+      left: var(--page-m);
+      width: calc(2 * var(--half) - 2 * var(--page-m));
+      height: calc(100dvh - var(--book-top) - var(--book-bottom));
+      padding: 34px var(--page-pad) 44px;
+      column-count: 2;
+      column-gap: calc(2 * (var(--page-m) + var(--page-pad)));
+      column-fill: auto;
+    }
+    .book .sheet-sign {
+      break-inside: avoid;
+    }
   }
 }
 
@@ -1170,6 +1202,12 @@ html:has(.desk) {
   100% {
     transform: perspective(1200px) rotateX(180deg);
     z-index: 1;
+  }
+}
+@keyframes press {
+  from {
+    scale: 1.45;
+    opacity: 0;
   }
 }
 @keyframes rise {
