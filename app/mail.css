@@ -21,6 +21,65 @@
   --letter-size: 23px;
   --letter-lh: 33px;
   --sheet-pad: 30px 26px 44px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --spring-pop: linear(
+    0,
+    0.059,
+    0.199,
+    0.372,
+    0.548,
+    0.705,
+    0.834,
+    0.932,
+    0.999,
+    1.041,
+    1.062,
+    1.068,
+    1.064,
+    1.055,
+    1.043,
+    1.031,
+    1.021,
+    1.012,
+    1.005,
+    1,
+    0.997,
+    0.996,
+    1
+  );
+  --spring-part: linear(
+    0,
+    0.037,
+    0.127,
+    0.246,
+    0.377,
+    0.505,
+    0.623,
+    0.727,
+    0.814,
+    0.884,
+    0.938,
+    0.978,
+    1.006,
+    1.023,
+    1.034,
+    1.038,
+    1.038,
+    1.036,
+    1.032,
+    1.027,
+    1.022,
+    1.017,
+    1.013,
+    1.009,
+    1.006,
+    1.003,
+    1.002,
+    1,
+    0.999,
+    0.999,
+    1
+  );
   position: relative;
   min-height: 100dvh;
   color: var(--surface-text);
@@ -252,6 +311,11 @@ html:has(.desk) {
   transform: rotateY(180deg) rotate(-1deg);
   opacity: 0;
   pointer-events: none;
+  transition: scale 550ms var(--spring-pop);
+}
+.ritual[data-holding] .env-back {
+  scale: 0.99;
+  transition: scale 900ms var(--ease-out);
 }
 .ritual[data-flipped] .env-front {
   animation: face-out 700ms both;
@@ -365,20 +429,24 @@ html:has(.desk) {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  transition: transform 150ms ease-out;
+}
+.seal-whole {
+  transition: scale 550ms var(--spring-pop);
 }
 .seal-half {
   opacity: 0;
 }
 .ritual[data-holding] .seal-whole {
-  transform: scale(0.96);
+  scale: 0.93;
+  transition: scale 900ms var(--ease-out);
+  animation: strain 900ms linear both;
 }
 .ritual[data-opened] .seal-whole {
   opacity: 0;
 }
 .ritual[data-opened] .seal-half {
   opacity: 1;
-  transition: transform 400ms ease-out 120ms;
+  transition: transform 750ms var(--spring-part) 40ms;
 }
 .ritual[data-opened] .seal-left {
   transform: translate(-5%, 1%) rotate(-8deg);
@@ -986,6 +1054,45 @@ html:has(.desk) {
   }
   to {
     transform: perspective(1400px) rotateX(0deg);
+  }
+}
+@keyframes strain {
+  0%,
+  45% {
+    rotate: 0deg;
+    translate: 0 0;
+  }
+  52% {
+    rotate: -0.4deg;
+  }
+  58% {
+    rotate: 0.4deg;
+    translate: 0.2px 0;
+  }
+  64% {
+    rotate: -0.6deg;
+  }
+  70% {
+    rotate: 0.6deg;
+    translate: -0.3px 0.2px;
+  }
+  76% {
+    rotate: -0.8deg;
+  }
+  82% {
+    rotate: 0.9deg;
+    translate: 0.4px 0;
+  }
+  88% {
+    rotate: -1deg;
+  }
+  94% {
+    rotate: 1.1deg;
+    translate: -0.4px 0.3px;
+  }
+  100% {
+    rotate: -1.2deg;
+    translate: 0 0;
   }
 }
 @keyframes fade-in {

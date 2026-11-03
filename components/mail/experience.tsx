@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Theme } from "@/lib/theme";
+import { tap } from "@/lib/haptics";
 import { themeStyle } from "@/lib/texture";
 import { type Address, Envelope } from "./envelope";
 import { HalfSeal } from "./seal";
@@ -60,7 +61,6 @@ export function Experience({ delivery }: { delivery: Delivery }) {
   const [holding, setHolding] = useState(false);
   const reduced = useReducedMotion();
   const ring = useRef<SVGCircleElement>(null);
-  const hold = useRef<number | null>(null);
   const envelopeLetter = useRef<HTMLDivElement>(null);
   const source = useRef<DOMRect | null>(null);
   const fold = useRef<HTMLDivElement>(null);
@@ -113,8 +113,22 @@ export function Experience({ delivery }: { delivery: Delivery }) {
     );
   }, [stage, reduced]);
 
-  function setRing(progress: number) {
-    ring.current?.style.setProperty("stroke-dashoffset", String(ringLength * (1 - progress)));
+  function fillRing(full: boolean) {
+    const circle = ring.current;
+
+    if (!circle) return;
+    const left = Number.parseFloat(getComputedStyle(circle).strokeDashoffset) / ringLength;
+
+    circle.style.transition = full
+      ? `stroke-dashoffset ${Math.round(holdMs * left)}ms linear`
+      : "stroke-dashoffset 200ms cubic-bezier(0.23, 1, 0.32, 1)";
+    circle.style.strokeDashoffset = full ? "0" : String(ringLength);
+  }
+
+  function ringFilled(event: React.TransitionEvent<SVGCircleElement>) {
+    if (!holding || event.propertyName !== "stroke-dashoffset") return;
+
+    if (Number.parseFloat(getComputedStyle(event.currentTarget).strokeDashoffset) < 1) crack();
   }
 
   function fitOpenEnvelope() {
@@ -128,38 +142,24 @@ export function Experience({ delivery }: { delivery: Delivery }) {
 
   function crack() {
     fitOpenEnvelope();
-    hold.current = null;
     setHolding(false);
-    navigator.vibrate?.(10);
+    tap(12);
     setStage("open");
   }
 
   function press() {
-    if (stage !== "back" || hold.current !== null) return;
+    if (stage !== "back" || holding) return;
 
     if (reduced) return crack();
+    tap(6);
     setHolding(true);
-    ring.current?.style.setProperty("transition", "none");
-    const start = performance.now();
-
-    const tick = (now: number) => {
-      const progress = Math.min(1, (now - start) / holdMs);
-      setRing(progress);
-
-      if (progress === 1) return crack();
-      hold.current = requestAnimationFrame(tick);
-    };
-
-    hold.current = requestAnimationFrame(tick);
+    fillRing(true);
   }
 
   function release() {
-    if (hold.current === null) return;
-    cancelAnimationFrame(hold.current);
-    hold.current = null;
+    if (!holding) return;
     setHolding(false);
-    ring.current?.style.setProperty("transition", "stroke-dashoffset 200ms ease-out");
-    setRing(0);
+    fillRing(false);
   }
 
   function unfold() {
@@ -281,6 +281,7 @@ export function Experience({ delivery }: { delivery: Delivery }) {
                         strokeDasharray={ringLength}
                         strokeDashoffset={ringLength}
                         transform="rotate(-90 56 56)"
+                        onTransitionEnd={ringFilled}
                       />
                     </svg>
                   </button>
