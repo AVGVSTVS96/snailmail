@@ -83,7 +83,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   }, [theme.surface]);
 
   const autoUnfold = useEffectEvent(() => unfold());
-  const finishUnfold = useEffectEvent(() => change(() => setStage("read")));
+  const finishUnfold = useEffectEvent(() => change(() => setStage("read"), reduced || book));
 
   useEffect(() => {
     if (stage !== "open") return;
@@ -168,8 +168,8 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     return () => observer.disconnect();
   }, [book, stage]);
 
-  function change(update: () => void) {
-    if (!reduced || !("startViewTransition" in document)) return update();
+  function change(update: () => void, crossfade = reduced) {
+    if (!crossfade || !("startViewTransition" in document)) return update();
     document.startViewTransition(() => flushSync(update));
   }
 
