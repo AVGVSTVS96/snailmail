@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, type MutationCtx, mutation } from "./_generated/server";
+import { internalMutation, type MutationCtx, mutation, query } from "./_generated/server";
 import { themes } from "./schema";
 import { authorize } from "./secret";
 
@@ -77,7 +77,7 @@ export const read = mutation({
   },
 });
 
-export const media = mutation({
+export const preview = mutation({
   args: { ...door, kind: v.union(v.literal("image"), v.literal("video")) },
   handler: async (ctx, { secret, token, visitor, kind }) => {
     const letter = await find(ctx, secret, token, visitor);
@@ -87,6 +87,47 @@ export const media = mutation({
     const url = id ? await ctx.storage.getUrl(id) : null;
 
     return id && url ? { id, url } : null;
+  },
+});
+
+export const open = query({
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    const letter = await ctx.db
+      .query("letters")
+      .withIndex("by_token", (q) => q.eq("token", token))
+      .unique();
+
+    if (!letter) return null;
+
+    return {
+      token: letter.token,
+      theme: letter.theme,
+      to: letter.to,
+      toPlace: letter.toPlace,
+      from: letter.from,
+      city: letter.city,
+      openWhen: letter.openWhen ?? null,
+      body: letter.body,
+      sealedAt: letter.sealedAt,
+      image: letter.image ?? null,
+      video: letter.video ?? null,
+      timeZone: letter.timeZone,
+    };
+  },
+});
+
+export const media = query({
+  args: { token: v.string(), kind: v.union(v.literal("image"), v.literal("video")) },
+  handler: async (ctx, { token, kind }) => {
+    const letter = await ctx.db
+      .query("letters")
+      .withIndex("by_token", (q) => q.eq("token", token))
+      .unique();
+
+    const id = letter?.[kind];
+
+    return id ? await ctx.storage.getUrl(id) : null;
   },
 });
 

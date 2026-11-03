@@ -25,7 +25,7 @@ function byteRange(header: string | null, size: number) {
 
 export async function serveMedia(request: Request, token: string, kind: "image" | "video") {
   const args = await door(token);
-  const found = args ? await fetchMutation(api.letters.media, { ...args, kind }) : null;
+  const found = args ? await fetchMutation(api.letters.preview, { ...args, kind }) : null;
 
   if (found === "limited")
     return new Response("Too many requests", { status: 429, headers: { "Retry-After": "3600" } });
