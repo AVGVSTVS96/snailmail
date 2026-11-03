@@ -163,6 +163,15 @@ html:has(.desk[data-theme="midnight"]) {
     100% 0;
 }
 
+@media screen {
+  .desk[data-book][data-finish="deckle"] .sheet-content {
+    position: absolute;
+  }
+  .desk[data-book][data-finish="deckle"] .sheet .sheet-content::before {
+    display: none;
+  }
+}
+
 .sheet-content {
   position: relative;
 }
