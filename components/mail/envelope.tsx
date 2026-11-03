@@ -74,11 +74,13 @@ function Airmail({ theme }: { theme: Theme }) {
         fillRule="evenodd"
       />
       <g transform={`translate(24 ${H - 22 - 17})`}>
-        <rect width="124" height="17" rx="2" fill="none" stroke="#23407A" strokeWidth="1.2" />
+        <rect width="154" height="17" rx="2" fill="none" stroke="#23407A" strokeWidth="1.2" />
         <text
-          x="62"
+          x="77"
           y="11.6"
           textAnchor="middle"
+          textLength="140"
+          lengthAdjust="spacing"
           className="font-geist-mono"
           fontWeight="600"
           fontSize="8.5"
