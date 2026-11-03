@@ -115,22 +115,26 @@ function Editor({ saved }: { saved: Saved }) {
 
   const delivery = useMemo(
     () =>
-      toDelivery({
-        token: saved.token,
-        theme: draft.theme,
-        style: draft.style,
-        to: draft.to || "June",
-        toPlace: draft.toPlace,
-        from: draft.from || "Avery",
-        initial: draft.initial || null,
-        city: draft.city,
-        openWhen: draft.openWhen || null,
-        body: draft.body || "Your letter appears here as you write it.",
-        signature: draft.signature || null,
-        voice: saved.voice,
-        sealedAt: published ? saved.sealedAt : Date.now(),
-        timeZone: saved.timeZone,
-      }),
+      toDelivery(
+        {
+          token: saved.token,
+          theme: draft.theme,
+          style: draft.style,
+          to: draft.to || "June",
+          toPlace: draft.toPlace,
+          from: draft.from || "Avery",
+          initial: draft.initial || null,
+          city: draft.city,
+          openWhen: draft.openWhen || null,
+          sealedAt: published ? saved.sealedAt : Date.now(),
+          timeZone: saved.timeZone,
+        },
+        {
+          body: draft.body || "Your letter appears here as you write it.",
+          signature: draft.signature || null,
+          voice: saved.voice?.url ? { url: saved.voice.url, seconds: saved.voice.seconds } : null,
+        },
+      ),
     [draft, saved.token, saved.voice, saved.sealedAt, saved.timeZone, published],
   );
 
