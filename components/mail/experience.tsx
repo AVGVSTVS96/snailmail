@@ -58,6 +58,45 @@ function activate(action: () => void) {
   };
 }
 
+// Folding, unfolding or turning the phone rewraps every line of the letter, so the reader stays at the same line.
+function keepPlace() {
+  const parts = ".sheet-head, .sheet-p, .sheet-close > *, .sealed-line, .keep, .credit";
+  let place: { part: Element; into: number; width: number } | null = null;
+  const width = () => document.documentElement.clientWidth;
+
+  const remember = () => {
+    if (place && place.width !== width()) return;
+    place = null;
+
+    if (scrollY < 1) return;
+
+    for (const part of document.querySelectorAll(parts)) {
+      const { top, height } = part.getBoundingClientRect();
+
+      if (top + height <= 0) continue;
+      place = { part, into: height > 0 ? -top / height : 0, width: width() };
+
+      return;
+    }
+  };
+
+  const restore = () => {
+    if (!place || place.width === width()) return;
+    const { top, height } = place.part.getBoundingClientRect();
+    scrollBy(0, top + place.into * height);
+    place.width = width();
+  };
+
+  remember();
+  addEventListener("scroll", remember, { passive: true });
+  addEventListener("resize", restore);
+
+  return () => {
+    removeEventListener("scroll", remember);
+    removeEventListener("resize", restore);
+  };
+}
+
 export function Experience({ delivery, start = "front" }: { delivery: Delivery; start?: Stage }) {
   const { theme, address, seed, initial, token } = delivery;
   const [stage, setStage] = useState<Stage>(start);
@@ -68,19 +107,13 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   const reduced = useMedia("(prefers-reduced-motion: reduce)");
   const table = useMedia(tableQuery);
   const [unfoldedHere, setUnfoldedHere] = useState(false);
+  const [unfoldLast, setUnfoldLast] = useState(false);
   const ring = useRef<SVGCircleElement>(null);
   const envelopeLetter = useRef<HTMLDivElement>(null);
   const source = useRef<DOMRect | null>(null);
   const fold = useRef<HTMLDivElement>(null);
   const scene = useRef<HTMLElement>(null);
   const stageArea = useRef<HTMLDivElement>(null);
-  const storageKey = `snailmail:read:${token}`;
-
-  const readBefore = useSyncExternalStore(
-    subscribeNever,
-    () => localStorage.getItem(storageKey) !== null,
-    () => false,
-  );
 
   const foldableBefore = useSyncExternalStore(
     subscribeNever,
@@ -89,6 +122,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   );
 
   const unfoldNext = (unfoldedHere || foldableBefore) && !table;
+  const unfolding = stage === "unfold" || (stage === "open" && unfoldLast && table);
 
   useEffect(() => {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme.surface);
@@ -99,11 +133,11 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   const finishUnfold = useEffectEvent(() => change(() => setStage("read")));
 
   useEffect(() => {
-    if (stage !== "open" || unfoldNext) return;
-    const timer = setTimeout(autoUnfold, 4200);
+    if (stage !== "open" || (unfoldLast && !table)) return;
+    const timer = setTimeout(autoUnfold, unfoldLast ? 2000 : 4200);
 
     return () => clearTimeout(timer);
-  }, [stage, unfoldNext]);
+  }, [stage, unfoldLast, table]);
 
   const refit = useEffectEvent(() => fitOpenEnvelope());
 
@@ -132,8 +166,9 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
 
   useEffect(() => {
     if (stage !== "read") return;
-    localStorage.setItem(storageKey, "1");
-  }, [stage, storageKey]);
+
+    return keepPlace();
+  }, [stage]);
 
   useEffect(() => {
     if (stage !== "read" || reduced) return;
@@ -242,6 +277,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     void load();
     fitOpenEnvelope();
     setHolding(false);
+    setUnfoldLast(unfoldNext);
     tap(12);
     change(() => setStage("open"));
   }
@@ -270,10 +306,6 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     });
   }
 
-  function skip() {
-    withWords(() => change(() => setStage("read")));
-  }
-
   function again() {
     window.scrollTo({ top: 0 });
     change(() => {
@@ -298,11 +330,11 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
               reduced ? "Tap the seal to break it" : "Press and hold the seal",
               unfoldNext ? "then unfold your phone to read it" : reduced ? "" : "it breaks the way real wax does",
             ]
-        : stage === "open"
-          ? unfoldNext
-            ? ["Now unfold your phone", "or tap the letter to read it here"]
-            : ["Tap the letter to unfold it"]
-          : [];
+        : unfoldLast
+          ? ["Now unfold your phone", "or tap the letter to read it here"]
+          : stage === "open"
+            ? ["Tap the letter to unfold it"]
+            : [];
 
   return (
     <main className="desk" {...deskProps(theme)} data-stage={stage}>
@@ -313,12 +345,8 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
           data-flipped={flipped || undefined}
           data-opened={opened || undefined}
           data-holding={holding || undefined}
+          data-unfolding={unfolding || undefined}
         >
-          {readBefore && stage !== "unfold" && (
-            <button type="button" className="skip" onClick={skip}>
-              Skip to letter
-            </button>
-          )}
           <div className="ritual-label" key={`label-${label}`}>
             {label}
           </div>
@@ -402,7 +430,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
           <div className="ritual-hint" key={`hint-${hint.join()}`}>
             {hint[0] && (
               <div className="hint-main">
-                {stage === "open" && unfoldNext && (
+                {unfoldLast && (
                   <span className="hint-phone" aria-hidden>
                     <span />
                     <span />
