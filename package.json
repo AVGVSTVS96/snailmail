@@ -1,0 +1,41 @@
+{
+  "name": "snailmail",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "oxlint",
+    "format": "oxfmt",
+    "check": "oxlint && oxfmt --check && tsc --noEmit",
+    "preview": "bun scripts/preview.ts"
+  },
+  "dependencies": {
+    "convex": "1.49.0",
+    "next": "16.4.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@oxlint/plugins": "1.90.0",
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "oxfmt": "0.75.0",
+    "oxlint": "1.90.0",
+    "playwright": "1.64.1",
+    "tailwindcss": "^4",
+    "typescript": "5.9.3"
+  },
+  "packageManager": "bun@1.4.3",
+  "ignoreScripts": [
+    "sharp",
+    "unrs-resolver"
+  ],
+  "trustedDependencies": [
+    "sharp",
+    "unrs-resolver"
+  ]
+}

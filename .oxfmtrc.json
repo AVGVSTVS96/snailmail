@@ -1,0 +1,4 @@
+{
+  "printWidth": 120,
+  "ignorePatterns": ["convex/_generated/**", "tools/oxlint/anti-slop/**"]
+}
