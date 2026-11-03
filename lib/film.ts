@@ -4,12 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import chromium from "@sparticuz/chromium";
 import ffmpeg from "ffmpeg-static";
-import { type Browser, chromium as playwright, type Page } from "playwright-core";
+import { chromium as playwright, type Page } from "playwright-core";
 
 const fps = 30;
 const seconds = 5;
 const posterAt = 1500;
-const cameras = 3;
 
 async function launch() {
   if (!process.env.VERCEL) return await playwright.launch();
@@ -26,22 +25,7 @@ function seek(page: Page, ms: number) {
   }, ms);
 }
 
-async function frames(pages: Page[]) {
-  const shots: Buffer[] = [];
-
-  await Promise.all(
-    pages.map(async (page, camera) => {
-      for (let frame = camera; frame < fps * seconds; frame += pages.length) {
-        await seek(page, (frame * 1000) / fps);
-        shots[frame] = await page.screenshot({ type: "jpeg", quality: 95 });
-      }
-    }),
-  );
-
-  return shots;
-}
-
-async function encode(shots: Buffer[]) {
+async function encode(page: Page) {
   if (!ffmpeg) throw new Error("No ffmpeg binary for this platform");
   const dir = await mkdtemp(join(tmpdir(), "snailmail-"));
   const file = join(dir, "envelope.mp4");
@@ -62,7 +46,11 @@ async function encode(shots: Buffer[]) {
       encoder.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`))));
     });
 
-    for (const shot of shots) encoder.stdin.write(shot);
+    for (let frame = 0; frame < fps * seconds; frame++) {
+      await seek(page, (frame * 1000) / fps);
+      encoder.stdin.write(await page.screenshot({ type: "jpeg", quality: 95 }));
+    }
+
     encoder.stdin.end();
     await done;
 
@@ -72,27 +60,21 @@ async function encode(shots: Buffer[]) {
   }
 }
 
-async function open(browser: Browser, url: string) {
-  const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
-  const response = await page.goto(url, { waitUntil: "networkidle" });
-
-  if (!response?.ok()) throw new Error(`${url} answered ${response?.status()}`);
-  await page.evaluate(() => document.fonts.ready);
-
-  return page;
-}
-
 export async function film(url: string) {
   const browser = await launch();
 
   try {
-    const pages = await Promise.all(Array.from({ length: cameras }, () => open(browser, url)));
-    const shots = await frames(pages);
+    const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
+    const response = await page.goto(url, { waitUntil: "networkidle" });
 
-    await seek(pages[0], posterAt);
-    const image = await pages[0].screenshot({ type: "jpeg", quality: 90 });
+    if (!response?.ok()) throw new Error(`${url} answered ${response?.status()}`);
+    await page.evaluate(() => document.fonts.ready);
 
-    return { image, video: await encode(shots) };
+    await seek(page, posterAt);
+    const image = await page.screenshot({ type: "jpeg", quality: 90 });
+    const video = await encode(page);
+
+    return { image, video };
   } finally {
     await browser.close();
   }
