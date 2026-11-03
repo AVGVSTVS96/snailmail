@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { internalMutation, type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
+import { internalMutation, type MutationCtx, mutation, type QueryCtx } from "./_generated/server";
 import { themes } from "./schema";
 import { authorize } from "./secret";
 
@@ -135,39 +135,6 @@ export const preview = mutation({
     const url = id ? await ctx.storage.getUrl(id) : null;
 
     return id && url ? { id, url } : null;
-  },
-});
-
-export const open = query({
-  args: { token: v.string() },
-  handler: async (ctx, { token }) => {
-    const letter = sent(await byToken(ctx, token));
-
-    if (!letter) return null;
-
-    return {
-      token: letter.token,
-      theme: letter.theme,
-      to: letter.to,
-      toPlace: letter.toPlace,
-      from: letter.from,
-      city: letter.city,
-      openWhen: letter.openWhen ?? null,
-      body: letter.body,
-      sealedAt: letter.sealedAt,
-      image: letter.image ?? null,
-      video: letter.video ?? null,
-      timeZone: letter.timeZone,
-    };
-  },
-});
-
-export const media = query({
-  args: { token: v.string(), kind: v.union(v.literal("image"), v.literal("video")) },
-  handler: async (ctx, { token, kind }) => {
-    const id = sent(await byToken(ctx, token))?.[kind];
-
-    return id ? await ctx.storage.getUrl(id) : null;
   },
 });
 
