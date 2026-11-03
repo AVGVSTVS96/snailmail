@@ -121,20 +121,11 @@ html:has(.desk[data-theme="midnight"]) {
 }
 
 .desk[data-finish="ruled"] .sheet-body {
-  background-image: repeating-linear-gradient(
-    rgba(30, 47, 82, 0) 0,
-    rgba(30, 47, 82, 0) calc(var(--letter-lh) - 1px),
-    rgba(30, 47, 82, 0.12) calc(var(--letter-lh) - 1px),
-    rgba(30, 47, 82, 0.12) var(--letter-lh)
-  );
+  --rule: rgba(30, 47, 82, 0.12);
+  background: linear-gradient(transparent calc(var(--letter-lh) - 1px), var(--rule) 0) 0 0 / 100% var(--letter-lh);
 }
 .desk[data-paper-dark][data-finish="ruled"] .sheet-body {
-  background-image: repeating-linear-gradient(
-    rgba(255, 255, 255, 0) 0,
-    rgba(255, 255, 255, 0) calc(var(--letter-lh) - 1px),
-    rgba(255, 255, 255, 0.08) calc(var(--letter-lh) - 1px),
-    rgba(255, 255, 255, 0.08) var(--letter-lh)
-  );
+  --rule: rgba(255, 255, 255, 0.08);
 }
 .desk[data-finish="ruled"] .sheet-p {
   margin-bottom: var(--letter-lh);
@@ -185,12 +176,12 @@ html:has(.desk[data-theme="midnight"]) {
     90deg,
     #c33a3a 0,
     #c33a3a 14px,
-    rgba(0, 0, 0, 0) 14px,
-    rgba(0, 0, 0, 0) 20px,
+    var(--paper) 14px,
+    var(--paper) 20px,
     #23407a 20px,
     #23407a 34px,
-    rgba(0, 0, 0, 0) 34px,
-    rgba(0, 0, 0, 0) 40px
+    var(--paper) 34px,
+    var(--paper) 40px
   );
 }
 .airmail-label {
