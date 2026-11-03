@@ -1,11 +1,8 @@
 import { fetchQuery } from "convex/nextjs";
-import { cacheLife, cacheTag } from "next/cache";
+import { cacheLife } from "next/cache";
 import { api } from "@/convex/_generated/api";
 
-async function load(token: string, kind: "image" | "video") {
-  "use cache";
-  cacheLife("days");
-  cacheTag(`letter:${token}`);
+async function fetchMedia(token: string, kind: "image" | "video") {
   const url = await fetchQuery(api.letters.media, { token, kind });
 
   if (!url) return null;
@@ -14,6 +11,13 @@ async function load(token: string, kind: "image" | "video") {
   if (!response.ok) return null;
 
   return new Uint8Array(await response.arrayBuffer());
+}
+
+async function fetchVersion(token: string, kind: "image" | "video", _version: string) {
+  "use cache";
+  cacheLife("max");
+
+  return await fetchMedia(token, kind);
 }
 
 function byteRange(header: string | null, size: number) {
@@ -27,14 +31,15 @@ function byteRange(header: string | null, size: number) {
 }
 
 export async function serveMedia(request: Request, token: string, kind: "image" | "video") {
-  const bytes = await load(token, kind);
+  const version = new URL(request.url).searchParams.get("v");
+  const bytes = version === null ? await fetchMedia(token, kind) : await fetchVersion(token, kind, version);
 
   if (!bytes) return new Response("Not found", { status: 404 });
 
   const headers = new Headers({
     "Content-Type": kind === "image" ? "image/jpeg" : "video/mp4",
     "Accept-Ranges": "bytes",
-    "Cache-Control": "public, max-age=31536000, immutable",
+    "Cache-Control": version === null ? "public, max-age=300" : "public, max-age=31536000, immutable",
     "X-Robots-Tag": "noindex",
   });
 

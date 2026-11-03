@@ -1,17 +1,11 @@
 import { fetchQuery } from "convex/nextjs";
-import { cacheLife, cacheTag } from "next/cache";
+import { cache } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Delivery } from "@/components/mail/experience";
 import { seedFrom } from "@/components/mail/seal";
 import { themes } from "./theme";
 
-export async function getLetter(token: string) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(`letter:${token}`);
-
-  return await fetchQuery(api.letters.open, { token });
-}
+export const getLetter = cache(async (token: string) => await fetchQuery(api.letters.open, { token }));
 
 export type OpenedLetter = NonNullable<Awaited<ReturnType<typeof getLetter>>>;
 
