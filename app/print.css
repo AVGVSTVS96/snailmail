@@ -1,4 +1,4 @@
-/* Safari prints repeating gradients with transparent stops as solid black, so the textured paper stays on screen and print wins over every theme. A fixed layer repeats on every page, so it is the paper */
+/* Safari prints repeating gradients with transparent stops as solid black, so the textured paper stays on screen and print wins over every theme. Safari paints nothing past the letter's end, so the paper's shadow spreads over the rest of the last page */
 @media print {
   @page {
     margin: 0;
@@ -8,13 +8,13 @@
   }
   .desk {
     min-height: 0;
+    background: var(--paper);
+    box-shadow: 0 0 0 30in var(--paper);
     color: var(--ink);
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
-  .desk::before {
-    background: var(--paper);
-  }
+  .desk::before,
   .ritual,
   .keep,
   .credit-site,
