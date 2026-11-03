@@ -451,6 +451,16 @@ html:has(.w-signin) {
   }
   .w-table td[data-label="Link"] {
     grid-column: 1 / -1;
+    min-width: 0;
+  }
+  .w-link {
+    display: flex;
+    max-width: 100%;
+  }
+  .w-link a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .w-foot {
     flex-direction: column;
