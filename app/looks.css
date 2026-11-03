@@ -73,22 +73,6 @@ html:has(.desk[data-theme="midnight"]) {
     --letter-lh: 32px;
   }
 }
-/* book pages are phone-wide */
-@media screen {
-  .desk[data-book][data-face="typewriter"] {
-    --letter-size: 15px;
-    --letter-lh: 25px;
-  }
-  .desk[data-book][data-face="book"],
-  .desk[data-book][data-face="letterpress"] {
-    --letter-size: 19px;
-    --letter-lh: 29px;
-  }
-  .desk[data-book][data-face="clean"] {
-    --letter-size: 18px;
-    --letter-lh: 28px;
-  }
-}
 .desk:not([data-face="handwritten"]) .sheet-date {
   font-size: calc(var(--letter-size) * 0.82);
 }
@@ -104,7 +88,7 @@ html:has(.desk[data-theme="midnight"]) {
     0 16px 34px -12px rgba(40, 50, 60, 0.38);
 }
 /* a short letter is still a whole sheet, as tall as it unfolded, with both creases on it */
-.desk:not([data-book]) .sheet-content {
+.desk .sheet-content {
   min-height: calc(var(--panel) * 3);
 }
 
@@ -124,9 +108,8 @@ html:has(.desk[data-theme="midnight"]) {
   --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.6);
   --shadow-torn: 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
-.desk:not([data-book]) .sheet,
-.desk .fold::before,
-.desk[data-book] .book-page {
+.desk .sheet,
+.desk .fold::before {
   box-shadow: var(--shadow-contact), var(--shadow-soft);
 }
 .desk[data-paper-dark] .sheet::before,
@@ -188,8 +171,7 @@ html:has(.desk[data-theme="midnight"]) {
   isolation: isolate;
 }
 .desk[data-finish="deckle"] .sheet .sheet-content::before,
-.desk[data-finish="deckle"] .env-letter::before,
-.desk[data-book][data-finish="deckle"] .book-page::before {
+.desk[data-finish="deckle"] .env-letter::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -239,32 +221,6 @@ html:has(.desk[data-theme="midnight"]) {
   mask: var(--deckle-packet);
 }
 
-/* book pages: each page is the shadow, its paper reaches 4px past it, and the spine's shade lies on the desk */
-@media screen {
-  .desk[data-book="wide"][data-finish="deckle"] .book {
-    background: linear-gradient(
-        90deg,
-        transparent calc(var(--half) - 60px),
-        rgba(0, 0, 0, 0.28) var(--half),
-        transparent calc(var(--half) + 60px)
-      )
-      0 0 / calc(2 * var(--half)) 100% repeat-x;
-  }
-  .desk[data-book][data-finish="deckle"] .book-page {
-    isolation: isolate;
-    background: none;
-    box-shadow: var(--shadow-torn), var(--shadow-soft);
-  }
-  .desk[data-book][data-finish="deckle"] .book-page::before {
-    inset: -4px;
-    width: auto;
-  }
-  .desk[data-book][data-finish="deckle"] .sheet .sheet-content::before,
-  .desk[data-book][data-finish="deckle"] .sheet .sheet-content::after {
-    display: none;
-  }
-}
-
 .sheet-content {
   position: relative;
 }
@@ -305,16 +261,6 @@ html:has(.desk[data-theme="midnight"]) {
   width: 58px;
   margin: 8px auto 0 0;
   transform: rotate(-10deg);
-}
-
-/* in the book every page has its own airmail border, and the desk between pages stays bare */
-@media screen {
-  .desk[data-book] .book .airmail-stripe {
-    right: auto;
-    width: calc(var(--spreads) * 100vw);
-    mask: linear-gradient(90deg, #000 calc(var(--half) - 2 * var(--page-m)), transparent 0) 0 0 / var(--half) 100%
-      repeat-x;
-  }
 }
 
 .voice-note {

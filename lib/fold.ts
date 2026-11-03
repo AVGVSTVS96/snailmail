@@ -43,6 +43,17 @@ function classify(from: Viewport, to: Viewport): Fold | null {
   return null;
 }
 
+// Safari on an iPhone Duo reports the cover's screen on both screens, so the page fits neither of its sides. On other
+// iPhones the page spans one side of the screen it reports.
+export function looksFoldable() {
+  const { clientWidth } = document.documentElement;
+
+  return (
+    /iPhone/.test(navigator.userAgent) &&
+    [screen.width, screen.height].every((side) => Math.abs(side - clientWidth) > 1)
+  );
+}
+
 export function watchFold(onFold: (fold: Fold) => void) {
   if (!matchMedia("(pointer: coarse)").matches) return () => {};
 

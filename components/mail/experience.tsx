@@ -4,7 +4,7 @@ import Link from "next/link";
 import { flushSync } from "react-dom";
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Theme } from "@/lib/theme";
-import { watchFold } from "@/lib/fold";
+import { looksFoldable, watchFold } from "@/lib/fold";
 import { tap } from "@/lib/haptics";
 import { deskProps } from "@/lib/texture";
 import { type Address, Envelope } from "./envelope";
@@ -31,14 +31,7 @@ const holdMs = 900;
 const ringLength = 2 * Math.PI * 46;
 
 const tableQuery = "(min-width: 600px) and (min-height: 480px)";
-const halfFoldedQuery = `${tableQuery} and (horizontal-viewport-segments: 2)`;
-const halfFoldedTallQuery = `${tableQuery} and (vertical-viewport-segments: 2)`;
-const wideQuery = `${tableQuery} and (orientation: landscape)`;
-const tallQuery = `${tableQuery} and (orientation: portrait)`;
 const foldableKey = "snailmail:foldable";
-
-const autoDelays: Partial<Record<Stage, number>> = { front: 450, back: 900, open: 1350 };
-const refoldMs = 950;
 
 function useMedia(query: string) {
   return useSyncExternalStore(
@@ -73,22 +66,14 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   const [run, setRun] = useState(0);
   const [holding, setHolding] = useState(false);
   const reduced = useMedia("(prefers-reduced-motion: reduce)");
-  const halfFolded = useMedia(halfFoldedQuery);
-  const halfFoldedTall = useMedia(halfFoldedTallQuery);
-  const wide = useMedia(wideQuery);
-  const tall = useMedia(tallQuery);
-  const [opening, setOpening] = useState(false);
-  const [refolding, setRefolding] = useState(false);
-  const [resealed, setResealed] = useState(false);
+  const table = useMedia(tableQuery);
   const [unfoldedHere, setUnfoldedHere] = useState(false);
-  const [pages, setPages] = useState(2);
   const ring = useRef<SVGCircleElement>(null);
   const envelopeLetter = useRef<HTMLDivElement>(null);
   const source = useRef<DOMRect | null>(null);
   const fold = useRef<HTMLDivElement>(null);
   const scene = useRef<HTMLElement>(null);
   const stageArea = useRef<HTMLDivElement>(null);
-  const track = useRef<HTMLDivElement>(null);
   const storageKey = `snailmail:read:${token}`;
 
   const readBefore = useSyncExternalStore(
@@ -99,13 +84,11 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
 
   const foldableBefore = useSyncExternalStore(
     subscribeNever,
-    () => localStorage.getItem(foldableKey) !== null,
+    () => localStorage.getItem(foldableKey) !== null || looksFoldable(),
     () => false,
   );
 
-  const foldable = unfoldedHere || foldableBefore;
-  const book = halfFolded || (foldable && wide) ? "wide" : halfFoldedTall || (foldable && tall) ? "tall" : undefined;
-  const spreads = Math.ceil(pages / 2);
+  const unfoldNext = (unfoldedHere || foldableBefore) && !table;
 
   useEffect(() => {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme.surface);
@@ -113,16 +96,14 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
 
   const autoUnfold = useEffectEvent(() => unfold());
 
-  const finishUnfold = useEffectEvent(() =>
-    refolding ? reseal() : change(() => setStage("read"), reduced || book !== undefined),
-  );
+  const finishUnfold = useEffectEvent(() => change(() => setStage("read")));
 
   useEffect(() => {
-    if (stage !== "open") return;
+    if (stage !== "open" || unfoldNext) return;
     const timer = setTimeout(autoUnfold, 4200);
 
     return () => clearTimeout(timer);
-  }, [stage]);
+  }, [stage, unfoldNext]);
 
   const refit = useEffectEvent(() => fitOpenEnvelope());
 
@@ -136,29 +117,18 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
 
   useEffect(() => {
     if (stage !== "unfold") return;
-    const timer = setTimeout(finishUnfold, reduced ? 350 : refolding ? refoldMs : 1550);
+    const timer = setTimeout(finishUnfold, reduced ? 350 : 1550);
 
     return () => clearTimeout(timer);
-  }, [stage, reduced, refolding]);
+  }, [stage, reduced]);
 
-  const onFold = useEffectEvent((fold: "unfold" | "fold") => (fold === "unfold" ? openByUnfolding() : refold()));
-
-  useEffect(() => watchFold(onFold), []);
-
-  const autoStep = useEffectEvent(() => {
-    if (stage === "front") change(() => setStage("back"));
-    else if (stage === "back") crack();
-    else if (stage === "open") unfold();
+  const onUnfold = useEffectEvent(() => {
+    localStorage.setItem(foldableKey, "1");
+    setUnfoldedHere(true);
+    unfold();
   });
 
-  useEffect(() => {
-    const delay = autoDelays[stage];
-
-    if (!opening || delay === undefined) return;
-    const timer = setTimeout(autoStep, reduced ? 350 : delay);
-
-    return () => clearTimeout(timer);
-  }, [opening, stage, reduced]);
+  useEffect(() => watchFold((fold) => fold === "unfold" && onUnfold()), []);
 
   useEffect(() => {
     if (stage !== "read") return;
@@ -195,7 +165,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     const from = source.current;
     const target = fold.current?.querySelector(".panel-mid")?.getBoundingClientRect();
 
-    if (stage !== "unfold" || refolding || !from || !target || !fold.current || reduced) return;
+    if (stage !== "unfold" || !from || !target || !fold.current || reduced) return;
     const scaleX = from.width / target.width;
     const scaleY = from.height / target.height;
     const x = from.left + from.width / 2 - (target.left + target.width / 2);
@@ -209,27 +179,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     fold.current
       .querySelector(".env-letter-note")
       ?.animate([{ transform: `scaleY(${scaleX / scaleY})` }, { transform: "none" }], timing);
-  }, [stage, reduced, refolding]);
-
-  useEffect(() => {
-    const content = track.current?.querySelector(".sheet-content");
-
-    if (!book || stage !== "read" || !track.current || !content) return;
-    const box = track.current;
-
-    const count = () => {
-      const end = content.lastElementChild?.getBoundingClientRect().right ?? 0;
-      const page = book === "wide" ? innerWidth / 2 : (box.querySelector(".book-page")?.clientWidth ?? 0);
-
-      if (page > 0) setPages(Math.max(1, Math.ceil((end - content.getBoundingClientRect().left) / page)));
-    };
-
-    const observer = new ResizeObserver(count);
-    observer.observe(content);
-    void document.fonts.ready.then(count);
-
-    return () => observer.disconnect();
-  }, [book, stage, pages]);
+  }, [stage, reduced]);
 
   function load() {
     loading.current ??= fetch(`/l/${token}/letter`, { method: "POST", cache: "no-store" })
@@ -320,49 +270,12 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     });
   }
 
-  function openByUnfolding() {
-    localStorage.setItem(foldableKey, "1");
-    setUnfoldedHere(true);
-
-    if (refolding) return reseal(true);
-
-    if (stage !== "front" && stage !== "back" && stage !== "open") return;
-    void load();
-    setOpening(true);
-  }
-
-  function refold() {
-    setOpening(false);
-
-    if (stage === "front" || stage === "back" || refolding) return;
-
-    if (stage === "open") return reseal();
-    window.scrollTo({ top: 0 });
-    source.current = null;
-    change(() => {
-      setRefolding(true);
-      setStage("unfold");
-    }, true);
-  }
-
-  function reseal(thenOpen = false) {
-    setRefolding(false);
-    setResealed(!thenOpen);
-    setOpening(thenOpen);
-    change(() => {
-      setStage("back");
-      setRun((n) => n + 1);
-    }, true);
-  }
-
   function skip() {
     withWords(() => change(() => setStage("read")));
   }
 
   function again() {
     window.scrollTo({ top: 0 });
-    setResealed(false);
-    setOpening(false);
     change(() => {
       setStage("front");
       setRun((n) => n + 1);
@@ -375,22 +288,24 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   const ritual = stage !== "read";
   const label = stage === "front" ? delivery.arrived : stage === "back" ? "SEALED WITH WAX" : "";
 
-  const hint = opening
-    ? []
-    : stage === "front"
+  const hint =
+    stage === "front"
       ? ["Tap to turn it over", delivery.signedFrom]
       : stage === "back"
         ? holding
           ? ["Keep holding…"]
-          : reduced
-            ? ["Tap the seal to break it", foldable ? "or unfold your phone" : ""]
-            : ["Press and hold the seal", foldable ? "or unfold your phone" : "it breaks the way real wax does"]
+          : [
+              reduced ? "Tap the seal to break it" : "Press and hold the seal",
+              unfoldNext ? "then unfold your phone to read it" : reduced ? "" : "it breaks the way real wax does",
+            ]
         : stage === "open"
-          ? ["Tap the letter to unfold it"]
+          ? unfoldNext
+            ? ["Now unfold your phone", "or tap the letter to read it here"]
+            : ["Tap the letter to unfold it"]
           : [];
 
   return (
-    <main className="desk" {...deskProps(theme)} data-stage={stage} data-book={book}>
+    <main className="desk" {...deskProps(theme)} data-stage={stage}>
       {ritual && (
         <section
           ref={scene}
@@ -398,7 +313,6 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
           data-flipped={flipped || undefined}
           data-opened={opened || undefined}
           data-holding={holding || undefined}
-          data-resealed={resealed || undefined}
         >
           {readBefore && stage !== "unfold" && (
             <button type="button" className="skip" onClick={skip}>
@@ -486,7 +400,17 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
             </div>
           </div>
           <div className="ritual-hint" key={`hint-${hint.join()}`}>
-            {hint[0] && <div className="hint-main">{hint[0]}</div>}
+            {hint[0] && (
+              <div className="hint-main">
+                {stage === "open" && unfoldNext && (
+                  <span className="hint-phone" aria-hidden>
+                    <span />
+                    <span />
+                  </span>
+                )}
+                {hint[0]}
+              </div>
+            )}
             {hint[1] && <div className="hint-sub">{hint[1]}</div>}
           </div>
         </section>
@@ -495,7 +419,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
       {(stage === "unfold" || stage === "read") && letter && (
         <section className="reading">
           {stage === "unfold" ? (
-            <div className="fold" ref={fold} aria-hidden data-refolding={refolding || undefined}>
+            <div className="fold" ref={fold} aria-hidden>
               {(["top", "mid", "bot"] as const).map((panel, i) => (
                 <div key={panel} className={`panel panel-${panel}`}>
                   <div className="face face-front">
@@ -514,28 +438,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
           ) : (
             <>
               <article className="sheet" aria-label={`A letter from ${address.from}`}>
-                <div
-                  className="book"
-                  ref={track}
-                  style={{ "--spreads": spreads }}
-                  data-balanced={(book && pages <= 2) || undefined}
-                >
-                  {book &&
-                    Array.from({ length: spreads * 2 }, (_, i) => (
-                      <div
-                        key={i}
-                        className="book-page"
-                        style={{ "--i": i, "--spread": Math.floor(i / 2) }}
-                        data-folio={`${i + 1} / ${spreads * 2}`}
-                        inert={(book === "tall" && i > 0) || undefined}
-                      >
-                        {book === "tall" && (
-                          <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />
-                        )}
-                      </div>
-                    ))}
-                  {book !== "tall" && <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />}
-                </div>
+                <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />
               </article>
               <div className="sealed-line">{delivery.sealedLine}</div>
               <section className="end">
