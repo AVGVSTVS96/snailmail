@@ -17,7 +17,7 @@
   --u: calc(var(--env-w) / 346);
   --sheet-w: min(366px, calc(100vw - 24px));
   --sheet-top: 20px;
-  --panel: min(calc(var(--sheet-w) * 0.678), calc((100dvh - var(--sheet-top)) / 2.6));
+  --panel: min(calc(var(--sheet-w) * 0.678), calc((100svh - var(--sheet-top)) / 2.6));
   --letter-size: 23px;
   --letter-lh: 33px;
   --sheet-pad: 30px 26px 44px;
