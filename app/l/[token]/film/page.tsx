@@ -6,7 +6,7 @@ import { getLetter, toDelivery } from "@/lib/letters";
 import { deskProps } from "@/lib/texture";
 import "./film.css";
 
-export const metadata: Metadata = { robots: { index: false, follow: false } };
+export const metadata: Metadata = { robots: { index: false, follow: false, noarchive: true, noimageindex: true } };
 
 export default function FilmPage({ params }: PageProps<"/l/[token]/film">) {
   return (

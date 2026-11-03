@@ -7,6 +7,15 @@ import { absolute } from "@/lib/site";
 import { keepsake } from "@/lib/theme";
 import { deskProps } from "@/lib/texture";
 
+const unindexed = {
+  index: false,
+  follow: false,
+  noarchive: true,
+  nosnippet: true,
+  noimageindex: true,
+  nocache: true,
+};
+
 export async function generateMetadata({ params }: PageProps<"/l/[token]">): Promise<Metadata> {
   const { token } = await params;
   const letter = await getLetter(token);
@@ -21,7 +30,7 @@ export async function generateMetadata({ params }: PageProps<"/l/[token]">): Pro
   return {
     title,
     description,
-    robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
+    robots: { ...unindexed, googleBot: unindexed },
     referrer: "no-referrer",
     openGraph: {
       type: "website",
