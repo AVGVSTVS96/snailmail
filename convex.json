@@ -7,13 +7,6 @@
         "appHomepageUrl": "http://localhost:3000",
         "corsOrigins": ["http://localhost:3000", "http://localhost:3200"]
       }
-    },
-    "prod": {
-      "configure": {
-        "redirectUris": ["https://${buildEnv.VERCEL_PROJECT_PRODUCTION_URL}/callback"],
-        "appHomepageUrl": "https://${buildEnv.VERCEL_PROJECT_PRODUCTION_URL}",
-        "corsOrigins": ["https://${buildEnv.VERCEL_PROJECT_PRODUCTION_URL}"]
-      }
     }
   }
 }
