@@ -785,9 +785,17 @@ html:has(.desk) {
   border: 1px solid rgba(233, 220, 198, 0.35);
   font-weight: 500;
 }
+.keep-primary,
+.keep-secondary,
+.skip {
+  transition:
+    transform 160ms var(--ease-out),
+    border-color 150ms ease;
+}
 .keep-primary:active,
-.keep-secondary:active {
-  transform: scale(0.98);
+.keep-secondary:active,
+.skip:active {
+  transform: scale(0.97);
 }
 .keep-note {
   margin-top: 12px;
@@ -1075,6 +1083,54 @@ html:has(.desk) {
     transform: perspective(1400px) rotateX(0deg);
   }
 }
+/* Reveals as the reader scrolls: the signature is written in, the end screen arrives in order */
+
+:is(.sheet-sign, .sheet-drawn)[data-waiting]:not([data-shown]) {
+  clip-path: inset(-40% 110% -40% -10%);
+}
+:is(.sheet-sign, .sheet-drawn)[data-shown] {
+  clip-path: inset(-40% -10% -40% -10%);
+  transition: clip-path 1300ms cubic-bezier(0.5, 0, 0.3, 1) 150ms;
+}
+.keep[data-waiting]:not([data-shown])
+  :is(.keep-seal, .keep-title, .keep-text, .keep-primary, .keep-secondary, .keep-note) {
+  opacity: 0;
+  translate: 0 8px;
+}
+.keep[data-shown] :is(.keep-seal, .keep-title, .keep-text, .keep-primary, .keep-secondary, .keep-note) {
+  transition:
+    opacity 500ms var(--ease-out),
+    translate 500ms var(--ease-out),
+    transform 160ms var(--ease-out),
+    border-color 150ms ease;
+}
+.keep[data-shown] .keep-title {
+  transition-delay: 60ms;
+}
+.keep[data-shown] .keep-text {
+  transition-delay: 120ms;
+}
+.keep[data-shown] .keep-primary {
+  transition-delay: 180ms, 180ms, 0ms, 0ms;
+}
+.keep[data-shown] .keep-secondary {
+  transition-delay: 240ms, 240ms, 0ms, 0ms;
+}
+.keep[data-shown] .keep-note {
+  transition-delay: 300ms;
+}
+.keep-half {
+  transition: transform 750ms var(--spring-part) 120ms;
+}
+.keep[data-waiting]:not([data-shown]) :is(.keep-left, .keep-right) {
+  transform: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .keep-secondary:hover {
+    border-color: rgba(233, 220, 198, 0.6);
+  }
+}
+
 @keyframes settle {
   0%,
   72% {
@@ -1167,6 +1223,10 @@ html:has(.desk) {
   .ritual-stage,
   .reading {
     animation: fade-in 300ms ease-out both !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 300ms;
   }
 }
 

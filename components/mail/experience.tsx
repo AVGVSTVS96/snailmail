@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { flushSync } from "react-dom";
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Theme } from "@/lib/theme";
 import { tap } from "@/lib/haptics";
@@ -75,6 +76,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   );
 
   const autoUnfold = useEffectEvent(() => unfold());
+  const finishUnfold = useEffectEvent(() => change(() => setStage("read")));
 
   useEffect(() => {
     if (stage !== "open") return;
@@ -85,7 +87,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
 
   useEffect(() => {
     if (stage !== "unfold") return;
-    const timer = setTimeout(() => setStage("read"), reduced ? 350 : 1550);
+    const timer = setTimeout(finishUnfold, reduced ? 350 : 1550);
 
     return () => clearTimeout(timer);
   }, [stage, reduced]);
@@ -94,6 +96,32 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     if (stage !== "read") return;
     localStorage.setItem(storageKey, "1");
   }, [stage, storageKey]);
+
+  useEffect(() => {
+    if (stage !== "read" || reduced) return;
+
+    const below = [...document.querySelectorAll(".sheet-sign, .sheet-drawn, .keep")].filter(
+      (element) => element.getBoundingClientRect().top > innerHeight,
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.setAttribute("data-shown", "");
+          observer.unobserve(entry.target);
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px" },
+    );
+
+    for (const element of below) {
+      element.setAttribute("data-waiting", "");
+      observer.observe(element);
+    }
+
+    return () => observer.disconnect();
+  }, [stage, reduced]);
 
   useLayoutEffect(() => {
     const from = source.current;
@@ -114,6 +142,11 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
       .querySelector(".env-letter-note")
       ?.animate([{ transform: `scaleY(${scaleX / scaleY})` }, { transform: "none" }], timing);
   }, [stage, reduced]);
+
+  function change(update: () => void) {
+    if (!reduced || !("startViewTransition" in document)) return update();
+    document.startViewTransition(() => flushSync(update));
+  }
 
   function fillRing(full: boolean) {
     const circle = ring.current;
@@ -146,7 +179,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     fitOpenEnvelope();
     setHolding(false);
     tap(12);
-    setStage("open");
+    change(() => setStage("open"));
   }
 
   function press() {
@@ -167,17 +200,19 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   function unfold() {
     if (stage !== "open") return;
     source.current = envelopeLetter.current?.getBoundingClientRect() ?? null;
-    setStage("unfold");
+    change(() => setStage("unfold"));
   }
 
   function skip() {
-    setStage("read");
+    change(() => setStage("read"));
   }
 
   function again() {
     window.scrollTo({ top: 0 });
-    setStage("front");
-    setRun((n) => n + 1);
+    change(() => {
+      setStage("front");
+      setRun((n) => n + 1);
+    });
   }
 
   const flipped = stage !== "front";
@@ -229,9 +264,11 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
                     ? "Folded letter. Unfold it."
                     : "Envelope"
               }
-              onClick={() => (stage === "front" ? setStage("back") : stage === "open" ? unfold() : undefined)}
+              onClick={() =>
+                stage === "front" ? change(() => setStage("back")) : stage === "open" ? unfold() : undefined
+              }
               onKeyDown={activate(() =>
-                stage === "front" ? setStage("back") : stage === "open" ? unfold() : undefined,
+                stage === "front" ? change(() => setStage("back")) : stage === "open" ? unfold() : undefined,
               )}
             >
               <Envelope
