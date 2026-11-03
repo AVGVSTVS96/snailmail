@@ -9,6 +9,7 @@
  */
 
 import type * as letters from "../letters.js";
+import type * as render from "../render.js";
 
 import type {
   ApiFromModules,
@@ -18,6 +19,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   letters: typeof letters;
+  render: typeof render;
 }>;
 
 /**

@@ -71,23 +71,3 @@ export const seal = internalMutation({
     return token;
   },
 });
-
-export const uploadUrl = internalMutation({
-  args: {},
-  handler: async (ctx) => await ctx.storage.generateUploadUrl(),
-});
-
-export const attachMedia = internalMutation({
-  args: { token: v.string(), image: v.id("_storage"), video: v.id("_storage") },
-  handler: async (ctx, { token, image, video }) => {
-    const letter = await ctx.db
-      .query("letters")
-      .withIndex("by_token", (q) => q.eq("token", token))
-      .unique();
-
-    if (!letter) throw new Error("No letter with that token");
-
-    for (const old of [letter.image, letter.video]) if (old) await ctx.storage.delete(old);
-    await ctx.db.patch(letter._id, { image, video });
-  },
-});
