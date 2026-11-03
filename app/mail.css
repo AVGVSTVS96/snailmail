@@ -12,6 +12,7 @@
 }
 
 .desk {
+  --half: 50vw;
   --env-w: min(346px, calc(100vw - 44px));
   --env-h: calc(var(--env-w) * 235 / 346);
   --u: calc(var(--env-w) / 346);
@@ -699,7 +700,8 @@ html:has(.desk) {
 /* spread: the open Duo half-folded like a book. The envelope sits in the right half, its words in the left */
 @media (min-width: 600px) and (min-height: 480px) and (horizontal-viewport-segments: 2) {
   .desk {
-    --env-w: min(400px, calc(env(viewport-segment-width 0 0, 50vw) - 80px));
+    --half: env(viewport-segment-width 0 0, 50vw);
+    --env-w: min(400px, calc(var(--half) - 80px));
   }
   .ritual {
     grid-template-columns: 1fr 1fr;
@@ -732,7 +734,6 @@ html:has(.desk) {
 /* The letter as a book, half-folded or opened flat by unfolding: two facing pages, one per half, flowing across */
 @media screen {
   .desk[data-book] {
-    --half: env(viewport-segment-width 0 0, 50vw);
     --page-m: 36px;
     --page-pad: 36px;
     --book-top: max(28px, calc(env(safe-area-inset-top) + 20px));
