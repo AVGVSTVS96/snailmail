@@ -78,6 +78,10 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     () => false,
   );
 
+  useEffect(() => {
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme.surface);
+  }, [theme.surface]);
+
   const autoUnfold = useEffectEvent(() => unfold());
   const finishUnfold = useEffectEvent(() => change(() => setStage("read")));
 
