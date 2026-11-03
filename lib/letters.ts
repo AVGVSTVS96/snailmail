@@ -4,10 +4,9 @@ import { connection } from "next/server";
 import { cache } from "react";
 import { api } from "@/convex/_generated/api";
 import { serverSecret } from "@/convex/secret";
-import type { Delivery } from "@/components/mail/experience";
-import { seedFrom } from "@/components/mail/seal";
 import { scraperAgent } from "./crawlers";
-import { themes } from "./theme";
+
+export { toDelivery } from "./delivery";
 
 const linkToken = /^[\w-]{22}$/;
 
@@ -26,14 +25,20 @@ function network(ip: string) {
     .join(":")}::/64`;
 }
 
-export async function door(token: string) {
+async function visitor() {
   await connection();
   const request = await headers();
 
-  if (!linkToken.test(token) || scraperAgent.test(request.get("user-agent") ?? "")) return null;
+  if (scraperAgent.test(request.get("user-agent") ?? "")) return null;
   const ip = request.get("x-real-ip") ?? request.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
 
-  return { secret: serverSecret(), token, visitor: network(ip) };
+  return { secret: serverSecret(), visitor: network(ip) };
+}
+
+export async function door(token: string) {
+  const guest = linkToken.test(token) ? await visitor() : null;
+
+  return guest && { ...guest, token };
 }
 
 export const getLetter = cache(async (token: string) => {
@@ -49,42 +54,14 @@ export async function readLetter(token: string) {
   return args ? await fetchMutation(api.letters.read, args) : null;
 }
 
+const slugName = /^[a-z0-9-]{1,40}$/;
+const linkKey = /^[a-z0-9]{0,8}$/;
+
+export const getLetterAt = cache(async (slug: string, key: string) => {
+  const guest = slugName.test(slug) && linkKey.test(key) ? await visitor() : null;
+  const letter = guest ? await fetchMutation(api.letters.envelopeAt, { ...guest, slug, key }) : null;
+
+  return letter === "limited" ? null : letter;
+});
+
 export type OpenedLetter = NonNullable<Awaited<ReturnType<typeof getLetter>>>;
-
-function dateParts(at: number, timeZone: string) {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone,
-  }).formatToParts(at);
-
-  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
-
-  return { day: part("day"), month: part("month"), year: part("year") };
-}
-
-export function toDelivery(letter: OpenedLetter): Delivery {
-  const { day, month, year } = dateParts(letter.sealedAt, letter.timeZone);
-  const short = month.slice(0, 3).toUpperCase();
-  const city = letter.city.toUpperCase();
-
-  return {
-    token: letter.token,
-    theme: themes[letter.theme],
-    address: {
-      to: letter.to,
-      toPlace: letter.toPlace,
-      from: letter.from,
-      openWhen: letter.openWhen,
-      postmark: { city, date: `${short} ${day}`, year },
-    },
-    letter: { from: letter.from, date: `${day} ${month} ${year}` },
-    seed: seedFrom(letter.token),
-    initial: letter.from.slice(0, 1).toUpperCase(),
-    arrived: `A LETTER ARRIVED · ${day} ${short}`,
-    signedFrom: `from ${letter.from}, sealed in ${letter.city}`,
-    sealedLine: `SEALED ${day} ${short} ${year} · ${city}`,
-    sealedOn: `${day} ${month} ${year}`,
-  };
-}

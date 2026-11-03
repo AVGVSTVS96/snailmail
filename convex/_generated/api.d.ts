@@ -10,7 +10,7 @@
 
 import type * as letters from "../letters.js";
 import type * as render from "../render.js";
-import type * as secret from "../secret.js";
+import type * as writer from "../writer.js";
 
 import type {
   ApiFromModules,
@@ -21,7 +21,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   letters: typeof letters;
   render: typeof render;
-  secret: typeof secret;
+  writer: typeof writer;
 }>;
 
 /**

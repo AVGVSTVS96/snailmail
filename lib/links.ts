@@ -1,0 +1,17 @@
+import { siteUrl } from "./site";
+
+export const rootDomain = process.env.SNAILMAIL_ROOT_DOMAIN || null;
+
+export type Hosts = { root: string | null; site: string };
+
+export const hosts: Hosts = { root: rootDomain, site: siteUrl };
+
+export function letterLink(
+  { token, slug, key }: { token: string; slug: string | null; key: string | null },
+  { root, site }: Hosts = hosts,
+) {
+  if (!root || !slug) return new URL(`/l/${token}`, site).href;
+  const scheme = root.startsWith("localhost") ? "http" : "https";
+
+  return `${scheme}://${slug}.${root}/${key ?? ""}`;
+}
