@@ -1,0 +1,88 @@
+/* The writer's tool stays crisp: only what opens, and the one moment a letter is sealed, moves. */
+
+.w-dialog[open] {
+  transition:
+    opacity 200ms cubic-bezier(0.23, 1, 0.32, 1),
+    scale 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.w-dialog[open]::backdrop {
+  transition: opacity 200ms ease-out;
+}
+.w-dialog[open] .w-dialog-desk .sealed {
+  transition:
+    translate 600ms
+      linear(
+        0,
+        0.029,
+        0.101,
+        0.195,
+        0.299,
+        0.402,
+        0.5,
+        0.589,
+        0.668,
+        0.735,
+        0.793,
+        0.84,
+        0.879,
+        0.91,
+        0.934,
+        0.953,
+        0.968,
+        0.979,
+        0.987,
+        0.993,
+        0.997,
+        0.999,
+        1.001,
+        1.002,
+        1.003,
+        1
+      )
+      80ms,
+    opacity 300ms ease-out 80ms;
+}
+.w-avatar-menu[open] .w-menu {
+  transform-origin: top right;
+  transition:
+    opacity 150ms ease-out,
+    scale 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.w-copied {
+  transition:
+    opacity 150ms ease-out,
+    scale 200ms cubic-bezier(0.23, 1, 0.32, 1),
+    filter 150ms ease-out;
+}
+
+@starting-style {
+  .w-dialog[open] {
+    opacity: 0;
+    scale: 0.96;
+  }
+  .w-dialog[open]::backdrop {
+    opacity: 0;
+  }
+  .w-dialog[open] .w-dialog-desk .sealed {
+    opacity: 0;
+    translate: 0 12px;
+  }
+  .w-avatar-menu[open] .w-menu {
+    opacity: 0;
+    scale: 0.97;
+  }
+  .w-copied {
+    opacity: 0;
+    scale: 0.8;
+    filter: blur(2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .w-dialog[open],
+  .w-dialog[open] .w-dialog-desk .sealed,
+  .w-avatar-menu[open] .w-menu,
+  .w-copied {
+    transition-property: opacity;
+  }
+}

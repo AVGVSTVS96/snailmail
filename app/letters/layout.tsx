@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { WriterProviders } from "@/components/writer/providers";
 import { hosts } from "@/lib/links";
 import "./writer.css";
+import "./motion.css";
 
 export const metadata: Metadata = { title: "Letters · snailmail", robots: { index: false, follow: false } };
 
