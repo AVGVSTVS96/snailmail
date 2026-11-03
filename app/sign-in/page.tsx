@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SealedEnvelope } from "@/components/mail/sealed";
 import { bookUrl, Wordmark } from "@/components/writer/chrome";
+import { GoogleButton } from "@/components/writer/google-button";
 import { keepsake } from "@/lib/theme";
 import { deskProps } from "@/lib/texture";
 import "../letters/writer.css";
@@ -50,10 +52,19 @@ export default function SignIn() {
           <p>
             Write a letter, seal it with wax and send it as a link. It arrives in an envelope and opens like real mail.
           </p>
-          <a className="w-google" href="/auth/google">
-            {google()}
-            Continue with Google
-          </a>
+          <Suspense
+            fallback={
+              <a className="w-google" href="/auth/google">
+                {google()}
+                Continue with Google
+              </a>
+            }
+          >
+            <GoogleButton>
+              {google()}
+              Continue with Google
+            </GoogleButton>
+          </Suspense>
           <p className="w-fine">Sign-in by WorkOS. Opening a letter never needs an account.</p>
         </div>
         <div className="w-fine w-signin-foot">snailmail</div>
