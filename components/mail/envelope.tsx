@@ -1,7 +1,7 @@
 import { useId } from "react";
 import type { Theme } from "@/lib/theme";
 import { HalfSeal, WaxSeal } from "./seal";
-import { Postmark, Stamp } from "./stationery";
+import { Postmark, SprigArt, Stamp } from "./stationery";
 
 export const W = 346;
 export const H = 235;
@@ -16,23 +16,95 @@ export type Address = {
   postmark: { city: string; date: string; year: string };
 };
 
+function AddressName({ theme, to }: { theme: Theme; to: string }) {
+  const x = W * 0.27;
+  const fill = theme.envelopeInk;
+
+  if (theme.address === "typewriter")
+    return (
+      <text x={x} y="124" className="font-courier" fontWeight="700" fontSize="22" letterSpacing="0.44" fill={fill}>
+        {to.toUpperCase()}
+      </text>
+    );
+
+  if (theme.address === "display")
+    return (
+      <text x={x} y="138" className="font-cormorant" fontStyle="italic" fontWeight="500" fontSize="44" fill={fill}>
+        {to}
+      </text>
+    );
+
+  if (theme.address === "letterpress")
+    return (
+      <text x={x} y="136" className="font-fell" fontStyle="italic" fontSize="40" fill={fill}>
+        {to}
+      </text>
+    );
+
+  return (
+    <text x={x} y="153" className="font-delafield" fontSize="62" fill={fill}>
+      {to}
+    </text>
+  );
+}
+
+const placeLines = {
+  script: { y: 190, size: 19, font: "font-caveat" },
+  typewriter: { y: 146, size: 13, font: "font-courier" },
+  display: { y: 162, size: 16, font: "font-cormorant" },
+  letterpress: { y: 160, size: 15, font: "font-fell" },
+};
+
+function Airmail({ theme }: { theme: Theme }) {
+  const id = useId();
+  const b = 8;
+
+  return (
+    <g>
+      <defs>
+        <pattern id={id} width="32" height="32" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="32" height="32" fill={theme.envelope} />
+          <rect width="10" height="32" fill="#C33A3A" />
+          <rect x="16" width="10" height="32" fill="#23407A" />
+        </pattern>
+      </defs>
+      <path
+        d={`M0,0 H${W} V${H} H0 Z M${b},${b} V${H - b} H${W - b} V${b} Z`}
+        fill={`url(#${id})`}
+        fillRule="evenodd"
+      />
+      <g transform={`translate(24 ${H - 22 - 17})`}>
+        <rect width="124" height="17" rx="2" fill="none" stroke="#23407A" strokeWidth="1.2" />
+        <text
+          x="62"
+          y="11.6"
+          textAnchor="middle"
+          className="font-geist-mono"
+          fontWeight="600"
+          fontSize="8.5"
+          letterSpacing="1"
+          fill="#23407A"
+        >
+          PAR AVION · BY AIR MAIL
+        </text>
+      </g>
+    </g>
+  );
+}
+
 function Front({ theme, address }: { theme: Theme; address: Address }) {
+  const place = placeLines[theme.address];
+  const label = theme.envelopeInk === theme.ink ? theme.inkSoft : theme.envelopeInk;
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 size-full" aria-hidden>
+      {theme.airmail && <Airmail theme={theme} />}
       {address.openWhen && (
         <g>
-          <text
-            x="24"
-            y="30"
-            className="font-geist-mono"
-            fontSize="8.5"
-            letterSpacing="1.2"
-            fill={theme.inkSoft}
-            opacity="0.8"
-          >
+          <text x="24" y="30" className="font-geist-mono" fontSize="8.5" letterSpacing="1.2" fill={label} opacity="0.8">
             OPEN WHEN
           </text>
-          <text x="24" y="50" className="font-caveat" fontSize="18" fill={theme.ink}>
+          <text x="24" y="50" className="font-caveat" fontSize="18" fill={theme.envelopeInk}>
             {address.openWhen}
           </text>
         </g>
@@ -47,12 +119,24 @@ function Front({ theme, address }: { theme: Theme; address: Address }) {
           </g>
         </g>
       </g>
-      <text x={W * 0.27} y="153" className="font-delafield" fontSize="62" fill={theme.ink}>
-        {address.to}
-      </text>
-      <text x={W * 0.27} y="190" className="font-caveat" fontSize="19" fill={theme.ink} opacity="0.85">
+      <AddressName theme={theme} to={address.to} />
+      <text
+        x={W * 0.27}
+        y={place.y}
+        className={place.font}
+        fontSize={place.size}
+        fill={theme.envelopeInk}
+        opacity="0.85"
+      >
         {address.toPlace}
       </text>
+      {theme.sprig && (
+        <g transform={`translate(10 ${H - 92}) rotate(-14 22 40)`}>
+          <svg width="56" height="75" viewBox="0 0 90 120">
+            <SprigArt />
+          </svg>
+        </g>
+      )}
     </svg>
   );
 }
@@ -90,7 +174,7 @@ function Pocket({ theme, from }: { theme: Theme; from: string }) {
         textAnchor="middle"
         className="font-caveat"
         fontSize="19"
-        fill={theme.ink}
+        fill={theme.envelopeInk}
         opacity="0.85"
       >
         from {from}
@@ -111,12 +195,73 @@ function Grain({ id, theme }: { id: string; theme: Theme }) {
   );
 }
 
-function Dots({ id, theme }: { id: string; theme: Theme }) {
+function Liner({ id, theme }: { id: string; theme: Theme }) {
+  const c = theme.liner;
+  const i = theme.linerInk;
+  const kind = theme.style.liner;
+
+  if (kind === "stripes")
+    return (
+      <pattern id={id} width="27" height="27" patternUnits="userSpaceOnUse">
+        <rect width="27" height="27" fill={c} />
+        <g transform="rotate(45 13.5 13.5)">
+          <rect x="-20" y="9" width="70" height="6" fill="#C33A3A" />
+          <rect x="-20" y="21" width="70" height="6" fill={i} />
+          <rect x="-20" y="-3" width="70" height="6" fill={i} />
+        </g>
+      </pattern>
+    );
+
+  if (kind === "sprigs")
+    return (
+      <pattern id={id} width="40" height="40" patternUnits="userSpaceOnUse">
+        <rect width="40" height="40" fill={c} />
+        <g fill="none" stroke={i} strokeOpacity="0.6" strokeWidth="1" strokeLinecap="round">
+          <path d="M8,30 C12,22 16,16 22,10" />
+          <path d="M12,23 C9,21 8,18 9,16 M15,18 C18,18 20,16 21,14 M17,15 C15,12 15,10 16,8" />
+        </g>
+        <circle cx="32" cy="30" r="1.4" fill={i} fillOpacity="0.5" />
+      </pattern>
+    );
+
+  if (kind === "stars")
+    return (
+      <pattern id={id} width="36" height="36" patternUnits="userSpaceOnUse">
+        <rect width="36" height="36" fill={c} />
+        <g fill={i} fillOpacity="0.8">
+          <circle cx="6" cy="8" r="0.9" />
+          <circle cx="26" cy="5" r="0.6" />
+          <circle cx="18" cy="22" r="1.1" />
+          <circle cx="31" cy="29" r="0.7" />
+          <circle cx="5" cy="30" r="0.6" />
+        </g>
+      </pattern>
+    );
+
+  if (kind === "marble")
+    return (
+      <pattern id={id} width="400" height="400" patternUnits="userSpaceOnUse">
+        <filter id={`${id}m`} x="0" y="0" width="1" height="1">
+          <feTurbulence type="turbulence" baseFrequency="0.012 0.03" numOctaves="4" seed="9" />
+          <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 -2.4 1.2" />
+        </filter>
+        <rect width="400" height="400" fill={c} />
+        <rect width="400" height="400" filter={`url(#${id}m)`} opacity="0.55" />
+      </pattern>
+    );
+
+  if (kind === "none")
+    return (
+      <pattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+        <rect width="10" height="10" fill={theme.envelopeShade} />
+      </pattern>
+    );
+
   return (
     <pattern id={id} width="14" height="14" patternUnits="userSpaceOnUse">
-      <rect width="14" height="14" fill={theme.liner} />
-      <circle cx="3.5" cy="3.5" r="1.3" fill={theme.linerInk} fillOpacity="0.55" />
-      <circle cx="10.5" cy="10.5" r="1.3" fill={theme.linerInk} fillOpacity="0.55" />
+      <rect width="14" height="14" fill={c} />
+      <circle cx="3.5" cy="3.5" r="1.3" fill={i} fillOpacity="0.55" />
+      <circle cx="10.5" cy="10.5" r="1.3" fill={i} fillOpacity="0.55" />
     </pattern>
   );
 }
@@ -127,7 +272,7 @@ function Inside({ theme }: { theme: Theme }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 size-full" aria-hidden>
       <defs>
-        <Dots id={`${id}d`} theme={theme} />
+        <Liner id={`${id}d`} theme={theme} />
         <linearGradient id={`${id}s`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#000" stopOpacity="0.35" />
           <stop offset="0.6" stopColor="#000" stopOpacity="0.05" />
@@ -161,7 +306,7 @@ function FlapInside({ theme }: { theme: Theme }) {
   return (
     <svg viewBox={`0 0 ${W} ${h}`} className="flap-face flap-inside" aria-hidden>
       <defs>
-        <Dots id={`${id}d`} theme={theme} />
+        <Liner id={`${id}d`} theme={theme} />
         <Grain id={`${id}g`} theme={theme} />
       </defs>
       <path d={outer} fill={theme.envelopeShade} />

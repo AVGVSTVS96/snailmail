@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { Theme } from "@/lib/theme";
+import type { EmblemKey, Theme } from "@/lib/theme";
 
 function random(seed: number) {
   let a = seed >>> 0;
@@ -49,9 +49,73 @@ const crack: ReadonlyArray<readonly [number, number]> = [
 
 const crackPath = crack.map(([x, y]) => `L${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
 
+const emblemPaths = {
+  heart: "M0,6 C-9,-1 -9,-9 -4,-10 C-1,-11 0,-8 0,-7 C0,-8 1,-11 4,-10 C9,-9 9,-1 0,6 Z",
+  star: "M0,-10 L2.6,-3.2 L9.5,-3.1 L4,1.3 L5.9,8.1 L0,4.1 L-5.9,8.1 L-4,1.3 L-9.5,-3.1 L-2.6,-3.2 Z",
+  moon: "M2,-10 C-4,-10 -9,-5 -9,1 C-9,6 -5,10 1,10 C5,10 8,8 9,5 C6,7 1,7 -2,4 C-5,1 -5,-5 2,-10 Z",
+};
+
+export function Emblem({ kind }: { kind: Exclude<EmblemKey, "initial"> }) {
+  if (kind === "flower")
+    return (
+      <g>
+        {[0, 60, 120, 180, 240, 300].map((a) => (
+          <ellipse key={a} cx="0" cy="-5.2" rx="3.1" ry="5" transform={`rotate(${a})`} />
+        ))}
+      </g>
+    );
+
+  if (kind === "snail")
+    return (
+      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" transform="translate(-1 -1)">
+        <path d="M-10,8 L10,8 C13,8 14,5 12,3" />
+        <path d="M-10,8 C-12,2 -7,-8 1,-8 C9,-8 11,0 6,4 C2,7 -4,5 -4,0 C-4,-4 2,-5 3,-2" />
+      </g>
+    );
+
+  return <path d={emblemPaths[kind]} />;
+}
+
+function Impression({ theme, initial }: { theme: Theme; initial: string }) {
+  const kind = theme.style.emblem;
+
+  if (kind === "initial") {
+    const fontSize = Math.round(inner * 1.25);
+
+    return (
+      <g className="font-fell" textAnchor="middle" fontSize={fontSize}>
+        <text x={center - 0.7} y={center + fontSize * 0.34 - 0.7} fill={theme.waxHi} opacity="0.55">
+          {initial}
+        </text>
+        <text x={center} y={center + fontSize * 0.34} fill={theme.waxLo} opacity="0.9">
+          {initial}
+        </text>
+      </g>
+    );
+  }
+
+  const k = inner / 15;
+
+  return (
+    <g>
+      <g
+        transform={`translate(${center - 0.6},${center - 0.6}) scale(${k})`}
+        fill={theme.waxHi}
+        color={theme.waxHi}
+        opacity="0.55"
+      >
+        <Emblem kind={kind} />
+      </g>
+      <g transform={`translate(${center},${center}) scale(${k})`} fill={theme.waxLo} color={theme.waxLo} opacity="0.85">
+        <Emblem kind={kind} />
+        {kind === "flower" && <circle r="2.6" fill={theme.wax} />}
+      </g>
+    </g>
+  );
+}
+
 function SealBody({ theme, initial, seed }: { theme: Theme; initial: string; seed: number }) {
   const id = useId();
-  const fontSize = Math.round(inner * 1.25);
 
   return (
     <g>
@@ -88,14 +152,7 @@ function SealBody({ theme, initial, seed }: { theme: Theme; initial: string; see
         strokeOpacity="0.7"
         strokeWidth="1.4"
       />
-      <g className="font-fell" textAnchor="middle" fontSize={fontSize}>
-        <text x={center - 0.7} y={center + fontSize * 0.34 - 0.7} fill={theme.waxHi} opacity="0.55">
-          {initial}
-        </text>
-        <text x={center} y={center + fontSize * 0.34} fill={theme.waxLo} opacity="0.9">
-          {initial}
-        </text>
-      </g>
+      <Impression theme={theme} initial={initial} />
       <ellipse
         cx={center - radius * 0.42}
         cy={center - radius * 0.5}

@@ -1,0 +1,235 @@
+.font-courier {
+  font-family: var(--font-courier);
+}
+.font-cormorant {
+  font-family: var(--font-cormorant);
+}
+
+html:has(.desk[data-theme="parAvion"]) {
+  background: #c9d3dc;
+}
+html:has(.desk[data-theme="pressed"]) {
+  background: #dcdccb;
+}
+html:has(.desk[data-theme="midnight"]) {
+  background: #0c0c10;
+}
+
+.sheet-p,
+.sheet-date {
+  font-family: var(--letter-face);
+}
+.sheet-p strong {
+  font-weight: 700;
+}
+.sheet-sign {
+  font-family: var(--sign-face);
+  font-size: calc(66px * var(--sign-scale));
+  color: var(--sign-color);
+  transform: rotate(var(--sign-rotate));
+}
+@media (min-width: 1200px) and (min-height: 480px) {
+  .sheet-sign {
+    font-size: calc(80px * var(--sign-scale));
+  }
+}
+.sheet-drawn {
+  display: block;
+  width: min(220px, 60%);
+  margin: 4px 0 0 auto;
+  overflow: visible;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.desk[data-face="typewriter"] {
+  --letter-size: 16px;
+  --letter-lh: 27px;
+}
+.desk[data-face="book"],
+.desk[data-face="letterpress"] {
+  --letter-size: 19px;
+  --letter-lh: 30px;
+}
+.desk[data-face="clean"] {
+  --letter-size: 18px;
+  --letter-lh: 29px;
+}
+@media (min-width: 600px) and (min-height: 480px) {
+  .desk[data-face="typewriter"] {
+    --letter-size: 19px;
+    --letter-lh: 32px;
+  }
+  .desk[data-face="book"],
+  .desk[data-face="letterpress"] {
+    --letter-size: 22px;
+    --letter-lh: 35px;
+  }
+  .desk[data-face="clean"] {
+    --letter-size: 21px;
+    --letter-lh: 34px;
+  }
+}
+.desk:not([data-face="handwritten"]) .sheet-date {
+  font-size: calc(var(--letter-size) * 0.82);
+}
+.desk[data-theme="midnight"] .sheet-date {
+  color: var(--wax-hi);
+  font-style: italic;
+}
+
+.desk[data-light] .env-front,
+.desk[data-light] .env-back > svg:first-child {
+  box-shadow:
+    0 1px 1px rgba(40, 40, 40, 0.12),
+    0 16px 34px -12px rgba(40, 50, 60, 0.38);
+}
+.desk[data-light] .sheet {
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.1),
+    0 18px 40px -10px rgba(30, 40, 60, 0.35);
+}
+.desk[data-paper-dark] .sheet {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 20px 40px rgba(0, 0, 0, 0.6);
+}
+.desk[data-paper-dark] .sheet::before,
+.desk[data-paper-dark] .sheet::after,
+.desk[data-paper-dark] .panel::before {
+  background: rgba(255, 255, 255, 0.05);
+  height: 1px;
+}
+
+.desk[data-finish="ruled"] .sheet-body {
+  background-image: repeating-linear-gradient(
+    rgba(30, 47, 82, 0) 0,
+    rgba(30, 47, 82, 0) calc(var(--letter-lh) - 1px),
+    rgba(30, 47, 82, 0.12) calc(var(--letter-lh) - 1px),
+    rgba(30, 47, 82, 0.12) var(--letter-lh)
+  );
+}
+.desk[data-paper-dark][data-finish="ruled"] .sheet-body {
+  background-image: repeating-linear-gradient(
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0) calc(var(--letter-lh) - 1px),
+    rgba(255, 255, 255, 0.08) calc(var(--letter-lh) - 1px),
+    rgba(255, 255, 255, 0.08) var(--letter-lh)
+  );
+}
+.desk[data-finish="ruled"] .sheet-p {
+  margin-bottom: var(--letter-lh);
+}
+
+.desk[data-finish="deckle"] .sheet {
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1)) drop-shadow(0 16px 24px rgba(30, 40, 60, 0.3));
+}
+.desk[data-finish="deckle"] .sheet-content {
+  position: relative;
+  isolation: isolate;
+}
+.desk[data-finish="deckle"] .sheet .sheet-content::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--paper);
+  background-image: var(--paper-bg);
+  mask-image: var(--deckle);
+  mask-repeat: no-repeat, repeat-x, repeat-x, repeat-y, repeat-y;
+  mask-size:
+    calc(100% - 6px) calc(100% - 6px),
+    120px 4px,
+    120px 4px,
+    4px 120px,
+    4px 120px;
+  mask-position:
+    center,
+    0 0,
+    0 100%,
+    0 0,
+    100% 0;
+}
+
+.sheet-content {
+  position: relative;
+}
+.airmail-stripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    #c33a3a 0,
+    #c33a3a 14px,
+    rgba(0, 0, 0, 0) 14px,
+    rgba(0, 0, 0, 0) 20px,
+    #23407a 20px,
+    #23407a 34px,
+    rgba(0, 0, 0, 0) 34px,
+    rgba(0, 0, 0, 0) 40px
+  );
+}
+.airmail-label {
+  padding: 3px 7px;
+  border: 1.2px solid var(--ink);
+  border-radius: 2px;
+  font-family: var(--font-geist-mono);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+}
+.head-seal {
+  width: 48px;
+  height: 48px;
+}
+.sheet-sprig {
+  display: block;
+  width: 58px;
+  margin: 8px auto 0 0;
+  transform: rotate(-10deg);
+}
+
+.voice-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin: -6px 0 24px;
+  padding: 7px 14px 7px 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.voice-disc {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.voice-disc svg {
+  width: 10px;
+  height: 12px;
+  fill: var(--paper);
+}
+.voice-wave {
+  width: 72px;
+  height: 18px;
+  fill: var(--ink);
+}
+.voice-time {
+  font-family: var(--font-courier);
+  font-size: 13px;
+}
