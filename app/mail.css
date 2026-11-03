@@ -18,9 +18,9 @@
   --sheet-w: min(366px, calc(100vw - 24px));
   --sheet-top: 20px;
   --panel: min(calc(var(--sheet-w) * 0.678), calc((100svh - var(--sheet-top)) / 2.6));
-  --letter-size: 23px;
-  --letter-lh: 33px;
-  --sheet-pad: 30px 26px 44px;
+  --letter-size: 22px;
+  --letter-lh: 32px;
+  --sheet-pad: 30px 22px 44px;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --spring-pop: linear(
     0,
@@ -89,9 +89,7 @@
 
 @media (max-width: 389px) {
   .desk {
-    --letter-size: 22px;
-    --letter-lh: 32px;
-    --sheet-pad: 26px 24px 40px;
+    --sheet-pad: 26px 20px 40px;
   }
 }
 
@@ -113,8 +111,8 @@
     --env-w: min(600px, calc(100vw - 110px), calc((100dvh - 230px) / 0.68));
     --sheet-w: min(640px, calc(100vw - 88px));
     --sheet-top: 28px;
-    --letter-size: 26px;
-    --letter-lh: 38px;
+    --letter-size: 24px;
+    --letter-lh: 36px;
     --sheet-pad: 46px 54px 60px;
   }
 }
@@ -123,8 +121,8 @@
   .desk {
     --sheet-w: 740px;
     --sheet-top: 64px;
-    --letter-size: 27px;
-    --letter-lh: 40px;
+    --letter-size: 26px;
+    --letter-lh: 38px;
     --sheet-pad: 64px 84px 72px;
   }
 }
@@ -631,11 +629,12 @@ html:has(.desk) {
   color: var(--ink-soft);
 }
 .sheet-p {
-  margin: 0 0 18px;
+  margin: 0 0 calc(var(--letter-lh) * 0.6);
   font-size: var(--letter-size);
   line-height: var(--letter-lh);
   white-space: pre-line;
   overflow-wrap: break-word;
+  text-wrap: pretty;
 }
 .sheet-sign {
   width: fit-content;
@@ -650,9 +649,6 @@ html:has(.desk) {
   }
   .sheet-date {
     font-size: 22px;
-  }
-  .sheet-p {
-    margin-bottom: 22px;
   }
   .sheet-sign {
     font-size: 80px;

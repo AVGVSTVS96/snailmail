@@ -46,47 +46,47 @@ html:has(.desk[data-theme="midnight"]) {
 }
 
 .desk[data-face="typewriter"] {
-  --letter-size: 16px;
-  --letter-lh: 27px;
+  --letter-size: 15px;
+  --letter-lh: 25px;
 }
 .desk[data-face="book"],
 .desk[data-face="letterpress"] {
   --letter-size: 19px;
-  --letter-lh: 30px;
+  --letter-lh: 29px;
 }
 .desk[data-face="clean"] {
   --letter-size: 18px;
-  --letter-lh: 29px;
+  --letter-lh: 28px;
 }
 @media (min-width: 600px) and (min-height: 480px) {
   .desk[data-face="typewriter"] {
-    --letter-size: 19px;
-    --letter-lh: 32px;
+    --letter-size: 18px;
+    --letter-lh: 30px;
   }
   .desk[data-face="book"],
   .desk[data-face="letterpress"] {
-    --letter-size: 22px;
-    --letter-lh: 35px;
+    --letter-size: 21px;
+    --letter-lh: 33px;
   }
   .desk[data-face="clean"] {
-    --letter-size: 21px;
-    --letter-lh: 34px;
+    --letter-size: 20px;
+    --letter-lh: 32px;
   }
 }
 /* the half-folded Duo's book pages are phone-wide */
 @media (min-width: 600px) and (min-height: 480px) and (horizontal-viewport-segments: 2) {
   .desk[data-face="typewriter"] {
-    --letter-size: 16px;
-    --letter-lh: 27px;
+    --letter-size: 15px;
+    --letter-lh: 25px;
   }
   .desk[data-face="book"],
   .desk[data-face="letterpress"] {
     --letter-size: 19px;
-    --letter-lh: 30px;
+    --letter-lh: 29px;
   }
   .desk[data-face="clean"] {
     --letter-size: 18px;
-    --letter-lh: 29px;
+    --letter-lh: 28px;
   }
 }
 .desk:not([data-face="handwritten"]) .sheet-date {
