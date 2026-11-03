@@ -37,7 +37,8 @@
     filter: none !important;
   }
   .sheet-content {
-    padding: 0.6in 0.9in 0;
+    padding: 0.6in 0.9in;
+    box-decoration-break: clone;
   }
   .sheet-p {
     orphans: 3;
@@ -56,7 +57,7 @@
     text-shadow: none;
   }
   .sealed-line {
-    margin-top: 40px;
+    margin-top: 0;
     color: var(--ink-soft);
     opacity: 1;
     break-after: avoid;
