@@ -106,7 +106,15 @@ export function PublishDialog({
         <SealedEnvelope theme={look} from={from} initial={initial} seed={seed} />
       </div>
       <div className="w-dialog-body">
-        <h2>{link ? "Sealed and ready to send" : problem ? "Not sealed yet" : "Sealing…"}</h2>
+        <h2>
+          {link
+            ? holding
+              ? "Sealed, almost ready"
+              : "Sealed and ready to send"
+            : problem
+              ? "Not sealed yet"
+              : "Sealing…"}
+        </h2>
         <p className="w-dialog-line">
           {problem ||
             (holding
