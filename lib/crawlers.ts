@@ -1,3 +1,5 @@
+export const unindexed = "noindex, nofollow, noarchive, nosnippet, noimageindex";
+
 export const scrapers = [
   "GPTBot",
   "ChatGPT-User",

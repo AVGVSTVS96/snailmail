@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
+import { unindexed as value } from "./lib/crawlers";
 
-const unindexed = [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, nosnippet, noimageindex" }];
+const unindexed = [{ key: "X-Robots-Tag", value }];
 
 const nextConfig: NextConfig = {
   headers: async () => [

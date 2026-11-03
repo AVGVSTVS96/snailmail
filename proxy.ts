@@ -1,5 +1,6 @@
 import { authkit, handleAuthkitProxy } from "@workos-inc/authkit-nextjs";
 import { type NextRequest, NextResponse } from "next/server";
+import { unindexed } from "@/lib/crawlers";
 
 const root = process.env.SNAILMAIL_ROOT_DOMAIN?.toLowerCase();
 
@@ -19,11 +20,12 @@ export default async function proxy(request: NextRequest) {
   if (slug) {
     const key = pathname.match(/^\/([a-z0-9]{0,12})$/)?.[1];
 
-    if (key === undefined) return NextResponse.next();
     const url = request.nextUrl.clone();
     url.pathname = key ? `/s/${slug}/${key}` : `/s/${slug}`;
+    const response = key === undefined ? NextResponse.next() : NextResponse.rewrite(url);
+    response.headers.set("X-Robots-Tag", unindexed);
 
-    return NextResponse.rewrite(url);
+    return response;
   }
 
   if (!pathname.startsWith("/letters")) return NextResponse.next();
