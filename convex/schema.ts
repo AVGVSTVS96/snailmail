@@ -92,6 +92,7 @@ export default defineSchema({
     updatedAt: v.optional(v.number()),
     opens: v.optional(v.number()),
     openedAt: v.optional(v.number()),
+    notify: v.optional(v.boolean()),
     image: v.optional(v.id("_storage")),
     video: v.optional(v.id("_storage")),
     rerender: v.optional(v.id("_scheduled_functions")),

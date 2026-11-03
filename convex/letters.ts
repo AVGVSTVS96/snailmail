@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx, mutation, type QueryCtx } from "./_generated/server";
 import { themes } from "./schema";
@@ -108,14 +109,24 @@ export const envelopeAt = mutation({
   },
 });
 
+async function countOpen(ctx: MutationCtx, letter: Doc<"letters">) {
+  const opens = letter.opens ?? 0;
+
+  await ctx.db.patch(letter._id, { opens: opens + 1, openedAt: Date.now() });
+
+  if (opens === 0 && letter.owner !== undefined && letter.notify !== false)
+    await ctx.scheduler.runAfter(0, internal.notify.opened, { id: letter._id });
+}
+
 export const read = mutation({
-  args: door,
-  handler: async (ctx, { secret, token, visitor }) => {
+  args: { ...door, reader: v.optional(v.string()) },
+  handler: async (ctx, { secret, token, visitor, reader }) => {
     const letter = await find(ctx, secret, token, visitor);
 
     if (letter === null || letter === "limited") return letter;
     const voiceUrl = letter.voice ? await ctx.storage.getUrl(letter.voice.file) : null;
-    await ctx.db.patch(letter._id, { opens: (letter.opens ?? 0) + 1, openedAt: Date.now() });
+
+    if (reader === undefined || reader !== letter.owner) await countOpen(ctx, letter);
 
     return {
       body: letter.body,

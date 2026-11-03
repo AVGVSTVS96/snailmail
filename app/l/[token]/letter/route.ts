@@ -1,10 +1,21 @@
+import { authkit } from "@workos-inc/authkit-nextjs";
+import type { NextRequest } from "next/server";
 import { readLetter } from "@/lib/letters";
 
 const headers = { "Cache-Control": "private, no-store" };
 
-export async function POST(_request: Request, { params }: RouteContext<"/l/[token]/letter">) {
+async function signedIn(request: NextRequest) {
+  if (!request.cookies.has("wos-session")) return undefined;
+
+  return await authkit(request).then(
+    ({ session }) => session.user?.id,
+    () => undefined,
+  );
+}
+
+export async function POST(request: NextRequest, { params }: RouteContext<"/l/[token]/letter">) {
   const { token } = await params;
-  const words = await readLetter(token);
+  const words = await readLetter(token, await signedIn(request));
 
   if (words === "limited")
     return new Response("Too many requests", { status: 429, headers: { ...headers, "Retry-After": "3600" } });

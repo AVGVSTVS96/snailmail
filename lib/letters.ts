@@ -48,10 +48,10 @@ export const getLetter = cache(async (token: string) => {
   return letter === "limited" ? null : letter;
 });
 
-export async function readLetter(token: string) {
+export async function readLetter(token: string, reader: string | undefined) {
   const args = await door(token);
 
-  return args ? await fetchMutation(api.letters.read, args) : null;
+  return args ? await fetchMutation(api.letters.read, { ...args, reader }) : null;
 }
 
 const slugName = /^[a-z0-9-]{1,40}$/;

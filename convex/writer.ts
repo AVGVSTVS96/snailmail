@@ -67,6 +67,7 @@ function summary(letter: Doc<"letters">) {
     updatedAt: letter.updatedAt ?? letter._creationTime,
     sealedAt: letter.sealedAt,
     previewReady: letter.image !== undefined,
+    notify: letter.notify !== false,
   };
 }
 
@@ -154,6 +155,7 @@ const edits = {
   openWhen: v.optional(v.string()),
   body: v.optional(v.string()),
   signature: v.optional(v.union(v.string(), v.null())),
+  notify: v.optional(v.boolean()),
 };
 
 function fits(text: string | null | undefined, max: number) {
