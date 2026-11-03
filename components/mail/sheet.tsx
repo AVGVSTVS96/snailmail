@@ -44,7 +44,22 @@ function Letterhead({ theme, initial, seed }: { theme: Theme; initial: string; s
 
 type SheetProps = { letter: Letter; initial: string; theme: Theme; seed?: number };
 
+const closingLength = 90;
+
 export function SheetContent({ letter, initial, theme, seed = 7 }: SheetProps) {
+  const all = paragraphs(letter.body);
+  const last = all.at(-1);
+  const closing = last !== undefined && last.length <= closingLength ? last : null;
+  const body = closing === null ? all : all.slice(0, -1);
+
+  const signature = letter.signature ? (
+    <svg className="sheet-drawn" viewBox="0 0 300 120" role="img" aria-label={letter.from}>
+      <path d={letter.signature} />
+    </svg>
+  ) : (
+    <div className="sheet-sign">{letter.from}</div>
+  );
+
   return (
     <div className="sheet-content">
       {theme.airmail && <div className="airmail-stripe" aria-hidden />}
@@ -54,20 +69,17 @@ export function SheetContent({ letter, initial, theme, seed = 7 }: SheetProps) {
       </div>
       {letter.voice && <VoiceNote url={letter.voice.url} seconds={letter.voice.seconds} />}
       <div className="sheet-body">
-        {paragraphs(letter.body).map((p, i) => (
+        {body.map((p, i) => (
           <p key={i} className="sheet-p">
             {inline(p)}
           </p>
         ))}
       </div>
-      {letter.signature ? (
-        <svg className="sheet-drawn" viewBox="0 0 300 120" role="img" aria-label={letter.from}>
-          <path d={letter.signature} />
-        </svg>
-      ) : (
-        <div className="sheet-sign">{letter.from}</div>
-      )}
-      {theme.sprig && <Sprig className="sheet-sprig" />}
+      <div className="sheet-close">
+        {closing !== null && <p className="sheet-p">{inline(closing)}</p>}
+        {signature}
+        {theme.sprig && <Sprig className="sheet-sprig" />}
+      </div>
     </div>
   );
 }

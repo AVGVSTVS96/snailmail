@@ -131,11 +131,11 @@ html:has(.desk[data-theme="midnight"]) {
   height: 1px;
 }
 
-.desk[data-finish="ruled"] .sheet-body {
+.desk[data-finish="ruled"] :is(.sheet-body, .sheet-close .sheet-p) {
   --rule: rgba(30, 47, 82, 0.12);
   background: linear-gradient(transparent calc(var(--letter-lh) - 1px), var(--rule) 0) 0 0 / 100% var(--letter-lh);
 }
-.desk[data-paper-dark][data-finish="ruled"] .sheet-body {
+.desk[data-paper-dark][data-finish="ruled"] :is(.sheet-body, .sheet-close .sheet-p) {
   --rule: rgba(255, 255, 255, 0.08);
 }
 .desk[data-finish="ruled"] .sheet-p {
@@ -344,4 +344,9 @@ html:has(.desk[data-theme="midnight"]) {
 }
 .desk:not([data-theme="keepsake"]) .keep-secondary {
   border-color: color-mix(in srgb, var(--surface-text) 35%, transparent);
+}
+
+/* a short sign-off stays with the signature across a page or column break */
+.sheet-close {
+  break-inside: avoid;
 }
