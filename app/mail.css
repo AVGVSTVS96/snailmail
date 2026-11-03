@@ -192,7 +192,7 @@ html:has(.desk) {
   gap: 6px;
   min-height: 42px;
   text-align: center;
-  animation: fade-in 400ms ease-out both;
+  animation: hint-in 450ms var(--ease-out) 80ms both;
 }
 .hint-main {
   font-weight: 500;
@@ -275,7 +275,13 @@ html:has(.desk) {
   transform-origin: 50% 20%;
   transition:
     transform 650ms cubic-bezier(0.4, 0, 0.2, 1) 270ms,
-    opacity 500ms ease-in;
+    opacity 500ms ease-in,
+    scale 160ms var(--ease-out);
+  animation: thud 140ms ease-out 1270ms;
+}
+.ritual:not([data-flipped]) .ritual-envelope:active .env-mover,
+.desk[data-stage="open"] .ritual-envelope:active .env-mover {
+  scale: 0.985;
 }
 .ritual[data-opened] .env-mover {
   transform: translateY(30%) scale(var(--open-scale, 1));
@@ -409,10 +415,14 @@ html:has(.desk) {
   animation: flap 650ms cubic-bezier(0.4, 0, 0.2, 1) 270ms both;
 }
 .ritual[data-opened] .flap-outside {
-  animation: flap-out 650ms 270ms both;
+  animation:
+    flap-out 650ms 270ms both,
+    flap-turn-away 650ms linear 270ms both;
 }
 .ritual[data-opened] .flap-inside {
-  animation: flap-in 650ms 270ms both;
+  animation:
+    flap-in 650ms 270ms both,
+    flap-turn-toward 650ms linear 270ms both;
 }
 
 .env-seal {
@@ -1054,6 +1064,30 @@ html:has(.desk) {
   }
   to {
     transform: perspective(1400px) rotateX(0deg);
+  }
+}
+@keyframes thud {
+  50% {
+    translate: 0 1px;
+  }
+}
+@keyframes flap-turn-away {
+  35%,
+  100% {
+    filter: brightness(0.8);
+  }
+}
+@keyframes flap-turn-toward {
+  0%,
+  35% {
+    filter: brightness(0.74);
+  }
+}
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+    filter: blur(2px);
   }
 }
 @keyframes strain {
