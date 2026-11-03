@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-type Viewport = { short: number; screen: string; outgrows: boolean; folded: boolean };
+type Viewport = { short: number; screen: string; outgrows: boolean; turned: string; folded: boolean };
 
 const jump = 1.3;
 const settleMs = 250;
@@ -24,15 +24,21 @@ function measure(): Viewport {
     short: Math.min(clientWidth, clientHeight),
     screen: screenSides.join("x"),
     outgrows: Math.max(clientWidth, clientHeight) > screenSides[1] + 1,
+    turned: screen.orientation?.type.split("-")[0] ?? "",
     folded: navigator.devicePosture?.type === "folded" || (window.viewport?.segments?.length ?? 1) > 1,
   };
 }
 
 // The page changed screens when the screen's size changes (Chrome on Android), when the page outgrows or fits back into
-// a screen size the browser never updates (Safari on the iPhone Duo), or when Device Posture or Viewport Segments
-// report a fold. Rotations keep the short side, and keyboards and toolbars keep the screen.
+// a screen size the browser never updates and the screen turns with it (Safari on the iPhone Duo, whose open screen is
+// wide where the cover is tall), or when Device Posture or Viewport Segments report a fold. Rotations keep the short
+// side, keyboards and toolbars keep the screen, and Split View on the open Duo halves the page but keeps it turned.
 function classify(from: Viewport, to: Viewport): Fold | null {
-  const moved = from.screen !== to.screen || from.outgrows !== to.outgrows || from.folded || to.folded;
+  const moved =
+    from.screen !== to.screen ||
+    (from.outgrows !== to.outgrows && from.turned !== to.turned) ||
+    from.folded ||
+    to.folded;
 
   if (!moved) return null;
 
