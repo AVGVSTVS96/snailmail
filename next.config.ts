@@ -5,6 +5,9 @@ const unindexed = [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, 
 const nextConfig: NextConfig = {
   headers: async () => [
     { source: "/l/:path*", headers: unindexed },
+    { source: "/s/:path*", headers: unindexed },
+    { source: "/letters/:path*", headers: unindexed },
+    { source: "/preview", headers: unindexed },
     { source: "/api/:path*", headers: unindexed },
   ],
   cacheComponents: true,

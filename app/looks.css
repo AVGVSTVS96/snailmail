@@ -240,3 +240,12 @@ html:has(.desk[data-theme="midnight"]) {
   font-family: var(--font-courier);
   font-size: 13px;
 }
+
+.desk[data-light] .keep-primary,
+.desk[data-theme="midnight"] .keep-primary {
+  background: var(--surface-text);
+  color: var(--surface);
+}
+.desk:not([data-theme="keepsake"]) .keep-secondary {
+  border-color: color-mix(in srgb, var(--surface-text) 35%, transparent);
+}
