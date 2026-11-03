@@ -29,6 +29,7 @@ export default function FoldCheck() {
 
   useEffect(() => {
     const id = Math.random().toString(36).slice(2, 8);
+
     const log = (event: string) => {
       const entry = reading(event);
       setLines((old) => [JSON.stringify(entry), ...old].slice(0, 40));
