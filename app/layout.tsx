@@ -3,8 +3,12 @@ import { fontVariables } from "@/lib/fonts";
 import "./globals.css";
 import "./mail.css";
 
+const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? (productionHost ? `https://${productionHost}` : "http://localhost:3000");
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(siteUrl),
   title: "snailmail",
   description: "A letter, sent as a link, that opens like real mail.",
 };

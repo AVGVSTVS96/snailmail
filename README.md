@@ -4,7 +4,7 @@ A letter, sent as a link, that opens like real mail.
 
 The person you write to gets an envelope with a stamp and a postmark. They turn it over, press and hold the wax seal until it breaks, take the letter out and unfold it, then read it on paper. At the end they can keep a copy as a PDF.
 
-The mail art is inspired by *The Art of Snail Mail* by Martina Calvi (Quadrille, 2026).
+The mail art is inspired by _The Art of Snail Mail_ by Martina Calvi (Quadrille, 2026).
 
 ## How it works
 
@@ -35,7 +35,7 @@ Paragraphs in `body` are separated by blank lines.
 
 ## Deploy
 
-On Vercel, set `CONVEX_DEPLOY_KEY` (production) and `NEXT_PUBLIC_SITE_URL`; the build runs `convex deploy --cmd 'next build'`. Render previews for production letters with `bun run preview <token> --prod --base https://your-site`.
+On Vercel, set `CONVEX_DEPLOY_KEY` (production). Link previews use the project's production domain, or `NEXT_PUBLIC_SITE_URL` when set. The build runs `convex deploy --cmd 'next build'`. Render previews for production letters with `bun run preview <token> --prod --base https://your-site`.
 
 ## License
 
