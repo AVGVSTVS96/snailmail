@@ -5,7 +5,11 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   serverExternalPackages: ["ffmpeg-static"],
   outputFileTracingIncludes: {
-    "/api/render/*": ["./node_modules/@sparticuz/chromium/bin/**", "./node_modules/ffmpeg-static/ffmpeg"],
+    "/api/render/*": [
+      "./node_modules/@sparticuz/chromium/bin/**",
+      "./node_modules/ffmpeg-static/ffmpeg",
+      "./node_modules/playwright-core/**",
+    ],
   },
   partialPrefetching: true,
   htmlLimitedBots:
