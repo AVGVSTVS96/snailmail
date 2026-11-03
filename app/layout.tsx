@@ -1,12 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { fontVariables } from "@/lib/fonts";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 import "./mail.css";
-
-const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
-
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? (productionHost ? `https://${productionHost}` : "http://localhost:3000");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

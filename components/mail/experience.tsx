@@ -64,6 +64,8 @@ export function Experience({ delivery }: { delivery: Delivery }) {
   const envelopeLetter = useRef<HTMLDivElement>(null);
   const source = useRef<DOMRect | null>(null);
   const fold = useRef<HTMLDivElement>(null);
+  const scene = useRef<HTMLElement>(null);
+  const stageArea = useRef<HTMLDivElement>(null);
   const storageKey = `snailmail:read:${token}`;
 
   const readBefore = useSyncExternalStore(
@@ -115,7 +117,17 @@ export function Experience({ delivery }: { delivery: Delivery }) {
     ring.current?.style.setProperty("stroke-dashoffset", String(ringLength * (1 - progress)));
   }
 
+  function fitOpenEnvelope() {
+    const room = stageArea.current?.clientHeight ?? 0;
+    const width = stageArea.current?.querySelector(".ritual-envelope")?.clientWidth ?? 0;
+    const openHeight = width * 1.088;
+    const scale = openHeight > 0 ? Math.min(1, (room - 12) / openHeight) : 1;
+
+    scene.current?.style.setProperty("--open-scale", String(scale));
+  }
+
   function crack() {
+    fitOpenEnvelope();
     hold.current = null;
     setHolding(false);
     navigator.vibrate?.(10);
@@ -188,6 +200,7 @@ export function Experience({ delivery }: { delivery: Delivery }) {
     <main className="desk" style={themeStyle(theme)} data-stage={stage}>
       {ritual && (
         <section
+          ref={scene}
           className="ritual"
           data-flipped={flipped || undefined}
           data-opened={opened || undefined}
@@ -201,7 +214,7 @@ export function Experience({ delivery }: { delivery: Delivery }) {
           <div className="ritual-label" key={`label-${label}`}>
             {label}
           </div>
-          <div className="ritual-stage">
+          <div className="ritual-stage" ref={stageArea}>
             <div
               key={run}
               className="ritual-envelope"

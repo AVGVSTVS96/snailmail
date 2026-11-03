@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Experience } from "@/components/mail/experience";
 import { getLetter, toDelivery } from "@/lib/letters";
+import { absolute } from "@/lib/site";
 import { keepsake } from "@/lib/theme";
 import { themeStyle } from "@/lib/texture";
 
@@ -14,6 +15,8 @@ export async function generateMetadata({ params }: PageProps<"/l/[token]">): Pro
   const title = `A letter for ${letter.to}`;
   const description = "Sealed with wax. It opens like real mail.";
   const url = `/l/${token}`;
+  const image = letter.image ? absolute(`${url}/envelope.jpg?v=${letter.image}`) : null;
+  const video = letter.video ? absolute(`${url}/envelope.mp4?v=${letter.video}`) : null;
 
   return {
     title,
@@ -25,12 +28,12 @@ export async function generateMetadata({ params }: PageProps<"/l/[token]">): Pro
       siteName: "snailmail",
       title,
       description,
-      url,
-      images: letter.image
+      url: absolute(url),
+      images: image
         ? [
             {
-              url: `${url}/envelope.jpg?v=${letter.image}`,
-              secureUrl: `${url}/envelope.jpg?v=${letter.image}`,
+              url: image,
+              secureUrl: image,
               type: "image/jpeg",
               width: 1200,
               height: 630,
@@ -38,11 +41,11 @@ export async function generateMetadata({ params }: PageProps<"/l/[token]">): Pro
             },
           ]
         : undefined,
-      videos: letter.video
+      videos: video
         ? [
             {
-              url: `${url}/envelope.mp4?v=${letter.video}`,
-              secureUrl: `${url}/envelope.mp4?v=${letter.video}`,
+              url: video,
+              secureUrl: video,
               type: "video/mp4",
               width: 1200,
               height: 630,

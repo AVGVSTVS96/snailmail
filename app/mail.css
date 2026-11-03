@@ -28,9 +28,40 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-@media (min-width: 768px) and (min-height: 640px) {
+@media (max-width: 389px) {
   .desk {
-    --env-w: 600px;
+    --letter-size: 22px;
+    --letter-lh: 32px;
+    --sheet-pad: 26px 24px 40px;
+  }
+}
+
+/* side: a phone, or the Duo's cover, on its side */
+@media (orientation: landscape) and (max-height: 479px) {
+  .desk {
+    --env-w: min(400px, calc((100dvh - 110px) / 0.68), calc(100vw - 222px));
+    --sheet-w: min(520px, calc(100vw - 74px));
+    --sheet-top: 14px;
+    --letter-size: 22px;
+    --letter-lh: 32px;
+    --sheet-pad: 28px 40px 40px;
+  }
+}
+
+/* table: the open Duo, tablets, desktop */
+@media (min-width: 600px) and (min-height: 480px) {
+  .desk {
+    --env-w: min(600px, calc(100vw - 110px), calc((100dvh - 230px) / 0.68));
+    --sheet-w: min(640px, calc(100vw - 88px));
+    --sheet-top: 28px;
+    --letter-size: 26px;
+    --letter-lh: 38px;
+    --sheet-pad: 46px 54px 60px;
+  }
+}
+
+@media (min-width: 1200px) and (min-height: 480px) {
+  .desk {
     --sheet-w: 740px;
     --sheet-top: 64px;
     --letter-size: 27px;
@@ -58,7 +89,7 @@ html:has(.desk) {
   display: grid;
   grid-template-rows: auto 1fr auto;
   justify-items: center;
-  padding: max(40px, calc(env(safe-area-inset-top) + 24px)) 0 max(44px, calc(env(safe-area-inset-bottom) + 28px));
+  padding: max(40px, calc(env(safe-area-inset-top) + 38px)) 0 max(40px, calc(env(safe-area-inset-bottom) + 24px));
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -114,7 +145,41 @@ html:has(.desk) {
   opacity: 0.6;
   letter-spacing: 0.02em;
 }
-@media (min-width: 768px) and (min-height: 640px) {
+@media (orientation: landscape) and (max-height: 479px) {
+  .ritual {
+    grid-template-columns: var(--env-w) 150px;
+    grid-template-rows: 1fr auto auto 1fr;
+    grid-template-areas: "stage ." "stage label" "stage hint" "stage .";
+    column-gap: 20px;
+    justify-content: center;
+    align-items: center;
+    padding: 0 26px;
+  }
+  .ritual-stage {
+    grid-area: stage;
+    height: 100%;
+  }
+  .ritual-label {
+    grid-area: label;
+    justify-self: start;
+    height: auto;
+    margin-bottom: 26px;
+    font-size: 10px;
+    line-height: 16px;
+  }
+  .ritual-hint {
+    grid-area: hint;
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+@media (min-width: 600px) and (min-height: 480px) {
+  .ritual {
+    padding: max(clamp(30px, 10dvh, 92px), calc(env(safe-area-inset-top) + 24px)) 0
+      calc(clamp(44px, 10dvh, 104px) + env(safe-area-inset-bottom));
+  }
+}
+@media (min-width: 1200px) and (min-height: 480px) {
   .hint-main {
     font-size: 16px;
   }
@@ -148,15 +213,16 @@ html:has(.desk) {
 .env-mover {
   position: absolute;
   inset: 0;
+  transform-origin: 50% 20%;
   transition:
     transform 650ms cubic-bezier(0.4, 0, 0.2, 1) 270ms,
     opacity 500ms ease-in;
 }
 .ritual[data-opened] .env-mover {
-  transform: translateY(30%);
+  transform: translateY(30%) scale(var(--open-scale, 1));
 }
 .desk[data-stage="unfold"] .env-mover {
-  transform: translateY(75%);
+  transform: translateY(75%) scale(var(--open-scale, 1));
   opacity: 0;
   transition:
     transform 500ms ease-in,
@@ -449,7 +515,6 @@ html:has(.desk) {
   box-shadow:
     0 1px 1px rgba(0, 0, 0, 0.3),
     0 20px 40px rgba(0, 0, 0, 0.45);
-  animation: fade-in 200ms ease-out both;
 }
 .sheet::before,
 .sheet::after {
@@ -492,7 +557,7 @@ html:has(.desk) {
   line-height: 1.1;
   transform: rotate(-4deg);
 }
-@media (min-width: 768px) and (min-height: 640px) {
+@media (min-width: 1200px) and (min-height: 480px) {
   .sheet-head {
     margin-bottom: 40px;
   }

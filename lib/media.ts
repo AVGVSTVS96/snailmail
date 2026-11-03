@@ -1,5 +1,6 @@
 import { fetchQuery } from "convex/nextjs";
 import { cacheLife } from "next/cache";
+import { connection } from "next/server";
 import { api } from "@/convex/_generated/api";
 
 async function fetchMedia(token: string, kind: "image" | "video") {
@@ -31,6 +32,7 @@ function byteRange(header: string | null, size: number) {
 }
 
 export async function serveMedia(request: Request, token: string, kind: "image" | "video") {
+  await connection();
   const version = new URL(request.url).searchParams.get("v");
   const bytes = version === null ? await fetchMedia(token, kind) : await fetchVersion(token, kind, version);
 
