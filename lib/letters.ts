@@ -1,16 +1,53 @@
-import { fetchQuery } from "convex/nextjs";
+import { fetchMutation } from "convex/nextjs";
+import { headers } from "next/headers";
 import { connection } from "next/server";
 import { cache } from "react";
 import { api } from "@/convex/_generated/api";
+import { serverSecret } from "@/convex/secret";
 import type { Delivery } from "@/components/mail/experience";
 import { seedFrom } from "@/components/mail/seal";
+import { scraperAgent } from "./crawlers";
 import { themes } from "./theme";
 
-export const getLetter = cache(async (token: string) => {
-  await connection();
+const linkToken = /^[\w-]{22}$/;
 
-  return await fetchQuery(api.letters.open, { token });
+function network(ip: string) {
+  if (!ip.includes(":")) return ip;
+
+  if (ip.includes(".")) return ip.slice(ip.lastIndexOf(":") + 1);
+  const [head = "", tail = ""] = ip.split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail ? tail.split(":") : [];
+  const groups = [...left, ...Array.from({ length: 8 - left.length - right.length }, () => "0"), ...right];
+
+  return `${groups
+    .slice(0, 4)
+    .map((group) => Number.parseInt(group, 16).toString(16))
+    .join(":")}::/64`;
+}
+
+export async function door(token: string) {
+  await connection();
+  const request = await headers();
+
+  if (!linkToken.test(token) || scraperAgent.test(request.get("user-agent") ?? "")) return null;
+  const ip = request.get("x-real-ip") ?? request.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+
+  return { secret: serverSecret(), token, visitor: network(ip) };
+}
+
+export const getLetter = cache(async (token: string) => {
+  const args = await door(token);
+  const letter = args ? await fetchMutation(api.letters.envelope, args) : null;
+
+  return letter === "limited" ? null : letter;
 });
+
+export async function readLetter(token: string) {
+  const args = await door(token);
+
+  return args ? await fetchMutation(api.letters.read, args) : null;
+}
 
 export type OpenedLetter = NonNullable<Awaited<ReturnType<typeof getLetter>>>;
 
@@ -42,7 +79,7 @@ export function toDelivery(letter: OpenedLetter): Delivery {
       openWhen: letter.openWhen,
       postmark: { city, date: `${short} ${day}`, year },
     },
-    letter: { body: letter.body, from: letter.from, date: `${day} ${month} ${year}` },
+    letter: { from: letter.from, date: `${day} ${month} ${year}` },
     seed: seedFrom(letter.token),
     initial: letter.from.slice(0, 1).toUpperCase(),
     arrived: `A LETTER ARRIVED · ${day} ${short}`,

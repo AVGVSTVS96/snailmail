@@ -1,24 +1,16 @@
-import { fetchQuery } from "convex/nextjs";
+import { fetchMutation } from "convex/nextjs";
 import { cacheLife } from "next/cache";
-import { connection } from "next/server";
 import { api } from "@/convex/_generated/api";
+import { door } from "./letters";
 
-async function fetchMedia(token: string, kind: "image" | "video") {
-  const url = await fetchQuery(api.letters.media, { token, kind });
-
-  if (!url) return null;
-  const response = await fetch(url);
-
-  if (!response.ok) return null;
-
-  return new Uint8Array(await response.arrayBuffer());
-}
-
-async function fetchVersion(token: string, kind: "image" | "video", _version: string) {
+async function stored(_id: string, url: string) {
   "use cache";
   cacheLife("max");
+  const response = await fetch(url);
 
-  return await fetchMedia(token, kind);
+  if (!response.ok) throw new Error(`Storage answered ${response.status}`);
+
+  return new Uint8Array(await response.arrayBuffer());
 }
 
 function byteRange(header: string | null, size: number) {
@@ -32,17 +24,20 @@ function byteRange(header: string | null, size: number) {
 }
 
 export async function serveMedia(request: Request, token: string, kind: "image" | "video") {
-  await connection();
-  const version = new URL(request.url).searchParams.get("v");
-  const bytes = version === null ? await fetchMedia(token, kind) : await fetchVersion(token, kind, version);
+  const args = await door(token);
+  const found = args ? await fetchMutation(api.letters.media, { ...args, kind }) : null;
 
-  if (!bytes) return new Response("Not found", { status: 404 });
+  if (found === "limited")
+    return new Response("Too many requests", { status: 429, headers: { "Retry-After": "3600" } });
+
+  if (!found) return new Response("Not found", { status: 404 });
+  const bytes = await stored(found.id, found.url);
+  const current = new URL(request.url).searchParams.get("v") === found.id;
 
   const headers = new Headers({
     "Content-Type": kind === "image" ? "image/jpeg" : "video/mp4",
     "Accept-Ranges": "bytes",
-    "Cache-Control": version === null ? "public, max-age=300" : "public, max-age=31536000, immutable",
-    "X-Robots-Tag": "noindex",
+    "Cache-Control": current ? "public, max-age=31536000, immutable" : "public, max-age=300",
   });
 
   const range = byteRange(request.headers.get("range"), bytes.length);

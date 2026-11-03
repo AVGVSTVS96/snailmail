@@ -8,7 +8,7 @@ import { tap } from "@/lib/haptics";
 import { deskProps } from "@/lib/texture";
 import { type Address, Envelope } from "./envelope";
 import { HalfSeal } from "./seal";
-import { type Letter, SheetContent } from "./sheet";
+import { type Letter, SheetContent, type Words } from "./sheet";
 
 export type Stage = "front" | "back" | "open" | "unfold" | "read";
 
@@ -16,7 +16,8 @@ export type Delivery = {
   token: string;
   theme: Theme;
   address: Address;
-  letter: Letter;
+  letter: Omit<Letter, keyof Words>;
+  words?: Words;
   seed: number;
   initial: string;
   arrived: string;
@@ -56,8 +57,10 @@ function activate(action: () => void) {
 }
 
 export function Experience({ delivery, start = "front" }: { delivery: Delivery; start?: Stage }) {
-  const { theme, address, letter, seed, initial, token } = delivery;
+  const { theme, address, seed, initial, token } = delivery;
   const [stage, setStage] = useState<Stage>(start);
+  const [words, setWords] = useState(delivery.words ?? null);
+  const loading = useRef<Promise<boolean> | null>(null);
   const [run, setRun] = useState(0);
   const [holding, setHolding] = useState(false);
   const reduced = useMedia("(prefers-reduced-motion: reduce)");
@@ -178,6 +181,31 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     return () => observer.disconnect();
   }, [book, stage]);
 
+  function load() {
+    loading.current ??= fetch(`/l/${token}/letter`, { method: "POST", cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then(
+        (written: Words | null) => {
+          if (written) setWords(written);
+          else loading.current = null;
+
+          return written !== null;
+        },
+        () => {
+          loading.current = null;
+
+          return false;
+        },
+      );
+
+    return loading.current;
+  }
+
+  function withWords(action: () => void) {
+    if (words) return action();
+    void load().then((loaded) => loaded && action());
+  }
+
   function change(update: () => void, crossfade = reduced) {
     if (!crossfade || !("startViewTransition" in document)) return update();
     document.startViewTransition(() => flushSync(update));
@@ -211,6 +239,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   }
 
   function crack() {
+    void load();
     fitOpenEnvelope();
     setHolding(false);
     tap(12);
@@ -221,6 +250,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     if (stage !== "back" || holding) return;
 
     if (reduced) return crack();
+    void load();
     tap(6);
     setHolding(true);
     fillRing(true);
@@ -234,12 +264,14 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
 
   function unfold() {
     if (stage !== "open") return;
-    source.current = envelopeLetter.current?.getBoundingClientRect() ?? null;
-    change(() => setStage("unfold"));
+    withWords(() => {
+      source.current = envelopeLetter.current?.getBoundingClientRect() ?? null;
+      change(() => setStage("unfold"));
+    });
   }
 
   function skip() {
-    change(() => setStage("read"));
+    withWords(() => change(() => setStage("read")));
   }
 
   function again() {
@@ -250,6 +282,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     });
   }
 
+  const letter = words && { ...delivery.letter, ...words };
   const flipped = stage !== "front";
   const opened = stage === "open" || stage === "unfold";
   const ritual = stage !== "read";
@@ -370,7 +403,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
         </section>
       )}
 
-      {(stage === "unfold" || stage === "read") && (
+      {(stage === "unfold" || stage === "read") && letter && (
         <section className="reading">
           {stage === "unfold" ? (
             <div className="fold" ref={fold} aria-hidden>

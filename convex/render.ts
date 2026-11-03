@@ -1,17 +1,6 @@
 import { v } from "convex/values";
 import { internalAction, mutation } from "./_generated/server";
-
-function secret() {
-  const value = process.env.SNAILMAIL_RENDER_SECRET;
-
-  if (!value) throw new Error("SNAILMAIL_RENDER_SECRET is not set");
-
-  return value;
-}
-
-function authorize(given: string) {
-  if (given !== secret()) throw new Error("Not authorized");
-}
+import { authorize, serverSecret } from "./secret";
 
 export const uploadUrl = mutation({
   args: { secret: v.string() },
@@ -48,7 +37,7 @@ export const request = internalAction({
 
     const response = await fetch(new URL(`/api/render/${encodeURIComponent(token)}`, site), {
       method: "POST",
-      headers: { Authorization: `Bearer ${secret()}` },
+      headers: { Authorization: `Bearer ${serverSecret()}` },
     });
 
     if (!response.ok) throw new Error(`Render failed with ${response.status}: ${await response.text()}`);

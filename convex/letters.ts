@@ -1,6 +1,10 @@
 import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, type MutationCtx, mutation } from "./_generated/server";
 import { themes } from "./schema";
+import { authorize } from "./secret";
+
+const missWindow = 60 * 60 * 1000;
+const missesAllowed = 20;
 
 function newToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -11,15 +15,40 @@ function newToken() {
     .replaceAll("=", "");
 }
 
-export const open = query({
-  args: { token: v.string() },
-  handler: async (ctx, { token }) => {
-    const letter = await ctx.db
-      .query("letters")
-      .withIndex("by_token", (q) => q.eq("token", token))
-      .unique();
+const door = { secret: v.string(), token: v.string(), visitor: v.string() };
 
-    if (!letter) return null;
+async function find(ctx: MutationCtx, secret: string, token: string, visitor: string) {
+  authorize(secret);
+
+  const misses = await ctx.db
+    .query("misses")
+    .withIndex("by_visitor", (q) => q.eq("visitor", visitor))
+    .unique();
+
+  const now = Date.now();
+  const recent = misses && now - misses.since < missWindow ? misses.count : 0;
+
+  if (recent >= missesAllowed) return "limited";
+
+  const letter = await ctx.db
+    .query("letters")
+    .withIndex("by_token", (q) => q.eq("token", token))
+    .unique();
+
+  if (letter) return letter;
+
+  if (!misses) await ctx.db.insert("misses", { visitor, count: 1, since: now });
+  else await ctx.db.patch(misses._id, recent ? { count: recent + 1 } : { count: 1, since: now });
+
+  return null;
+}
+
+export const envelope = mutation({
+  args: door,
+  handler: async (ctx, { secret, token, visitor }) => {
+    const letter = await find(ctx, secret, token, visitor);
+
+    if (letter === null || letter === "limited") return letter;
 
     return {
       token: letter.token,
@@ -29,7 +58,6 @@ export const open = query({
       from: letter.from,
       city: letter.city,
       openWhen: letter.openWhen ?? null,
-      body: letter.body,
       sealedAt: letter.sealedAt,
       image: letter.image ?? null,
       video: letter.video ?? null,
@@ -38,17 +66,27 @@ export const open = query({
   },
 });
 
-export const media = query({
-  args: { token: v.string(), kind: v.union(v.literal("image"), v.literal("video")) },
-  handler: async (ctx, { token, kind }) => {
-    const letter = await ctx.db
-      .query("letters")
-      .withIndex("by_token", (q) => q.eq("token", token))
-      .unique();
+export const read = mutation({
+  args: door,
+  handler: async (ctx, { secret, token, visitor }) => {
+    const letter = await find(ctx, secret, token, visitor);
 
-    const id = letter?.[kind];
+    if (letter === null || letter === "limited") return letter;
 
-    return id ? await ctx.storage.getUrl(id) : null;
+    return { body: letter.body };
+  },
+});
+
+export const media = mutation({
+  args: { ...door, kind: v.union(v.literal("image"), v.literal("video")) },
+  handler: async (ctx, { secret, token, visitor, kind }) => {
+    const letter = await find(ctx, secret, token, visitor);
+
+    if (letter === null || letter === "limited") return letter;
+    const id = letter[kind];
+    const url = id ? await ctx.storage.getUrl(id) : null;
+
+    return id && url ? { id, url } : null;
   },
 });
 

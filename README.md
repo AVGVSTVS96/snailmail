@@ -8,7 +8,8 @@ The mail art is inspired by _The Art of Snail Mail_ by Martina Calvi (Quadrille,
 
 ## How it works
 
-- **Letters** live in [Convex](https://convex.dev). Each one has an unguessable token, and its page is `/l/<token>`. Nothing lists letters, and every letter page is `noindex`.
+- **Letters** live in [Convex](https://convex.dev). Each one has an unguessable token, and its page is `/l/<token>`. Nothing lists letters.
+- **Privacy**: a letter's page carries only the envelope. Its words load when the reader breaks the seal (`POST /l/<token>/letter`, never cached), so a crawler or link-preview bot that fetches the link never sees them. Convex answers letter lookups only for the app's server, which passes the reader's network, and a network that misses 20 tokens in an hour gets nothing for the rest of it. Every letter route sends `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet, noimageindex`, and `robots.txt` shuts out AI crawlers entirely; search engines may still fetch a letter link, because that is how they read its noindex.
 - **The opening** is a single client component (`components/mail/experience.tsx`) that steps through envelope → seal → flap → unfold → read. The envelope, seal, stamp and postmark are inline SVG; the paper grain is SVG noise. It respects `prefers-reduced-motion`.
 - **Link previews**: each letter has an og:image (a still of the sealed envelope) and an og:video (a 5-second, silent H.264 clip of the envelope opening itself, never showing the letter's text). When a letter is published, the Convex action `render:request` calls `/api/render/<token>`, which films `/l/<token>/film` frame by frame in headless Chromium ([@sparticuz/chromium](https://github.com/Sparticuz/chromium) on Vercel), encodes it with ffmpeg and stores both files in Convex, replacing any older ones. The app serves them from `/l/<token>/envelope.jpg` and `/l/<token>/envelope.mp4` with range support.
 

@@ -12,6 +12,8 @@ export type Letter = {
   voice?: { url: string; seconds: number } | null;
 };
 
+export type Words = Pick<Letter, "body" | "signature" | "voice">;
+
 export function paragraphs(body: string) {
   return body.split(/\n\s*\n/).filter((p) => p.trim() !== "");
 }

@@ -18,4 +18,9 @@ export default defineSchema({
     image: v.optional(v.id("_storage")),
     video: v.optional(v.id("_storage")),
   }).index("by_token", ["token"]),
+  misses: defineTable({
+    visitor: v.string(),
+    count: v.number(),
+    since: v.number(),
+  }).index("by_visitor", ["visitor"]),
 });
