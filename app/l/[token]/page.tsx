@@ -5,7 +5,7 @@ import { Experience } from "@/components/mail/experience";
 import { getLetter, toDelivery } from "@/lib/letters";
 import { absolute } from "@/lib/site";
 import { keepsake } from "@/lib/theme";
-import { themeStyle } from "@/lib/texture";
+import { deskProps } from "@/lib/texture";
 
 export async function generateMetadata({ params }: PageProps<"/l/[token]">): Promise<Metadata> {
   const { token } = await params;
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: PageProps<"/l/[token]">): Pro
 
 export default function LetterPage({ params }: PageProps<"/l/[token]">) {
   return (
-    <Suspense fallback={<main className="desk" style={themeStyle(keepsake)} />}>
+    <Suspense fallback={<main className="desk" {...deskProps(keepsake)} />}>
       {params.then(({ token }) => (
         <Letter token={token} />
       ))}

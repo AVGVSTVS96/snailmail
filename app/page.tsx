@@ -1,6 +1,6 @@
 import { Envelope } from "@/components/mail/envelope";
 import { keepsake } from "@/lib/theme";
-import { themeStyle } from "@/lib/texture";
+import { deskProps } from "@/lib/texture";
 
 const sample = {
   to: "June",
@@ -12,7 +12,7 @@ const sample = {
 
 export default function Home() {
   return (
-    <main className="desk home" style={themeStyle(keepsake)}>
+    <main className="desk home" {...deskProps(keepsake)}>
       <section className="home-copy">
         <div className="wordmark">
           <span className="wordmark-dot" />

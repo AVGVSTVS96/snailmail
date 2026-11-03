@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Theme } from "@/lib/theme";
 import { tap } from "@/lib/haptics";
-import { themeStyle } from "@/lib/texture";
+import { deskProps } from "@/lib/texture";
 import { type Address, Envelope } from "./envelope";
 import { HalfSeal } from "./seal";
 import { type Letter, SheetContent } from "./sheet";
 
-type Stage = "front" | "back" | "open" | "unfold" | "read";
+export type Stage = "front" | "back" | "open" | "unfold" | "read";
 
 export type Delivery = {
   token: string;
@@ -54,9 +54,9 @@ function activate(action: () => void) {
   };
 }
 
-export function Experience({ delivery }: { delivery: Delivery }) {
+export function Experience({ delivery, start = "front" }: { delivery: Delivery; start?: Stage }) {
   const { theme, address, letter, seed, initial, token } = delivery;
-  const [stage, setStage] = useState<Stage>("front");
+  const [stage, setStage] = useState<Stage>(start);
   const [run, setRun] = useState(0);
   const [holding, setHolding] = useState(false);
   const reduced = useReducedMotion();
@@ -199,7 +199,7 @@ export function Experience({ delivery }: { delivery: Delivery }) {
           : [];
 
   return (
-    <main className="desk" style={themeStyle(theme)} data-stage={stage}>
+    <main className="desk" {...deskProps(theme)} data-stage={stage}>
       {ritual && (
         <section
           ref={scene}
@@ -306,7 +306,7 @@ export function Experience({ delivery }: { delivery: Delivery }) {
                 <div key={panel} className={`panel panel-${panel}`}>
                   <div className="face face-front">
                     <div className="window" style={{ top: `calc(var(--panel) * ${-i})` }}>
-                      <SheetContent letter={letter} initial={initial} />
+                      <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />
                     </div>
                   </div>
                   {panel !== "mid" && (
@@ -320,7 +320,7 @@ export function Experience({ delivery }: { delivery: Delivery }) {
           ) : (
             <>
               <article className="sheet" aria-label={`A letter from ${address.from}`}>
-                <SheetContent letter={letter} initial={initial} />
+                <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />
               </article>
               <div className="sealed-line">{delivery.sealedLine}</div>
               <section className="end">

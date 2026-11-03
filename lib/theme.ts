@@ -65,12 +65,19 @@ export const liners = {
 } as const;
 
 export type PaperKey = keyof typeof papers;
+
 export type FinishKey = keyof typeof finishes;
+
 export type InkKey = keyof typeof inks;
+
 export type TypefaceKey = keyof typeof typefaces;
+
 export type WaxKey = keyof typeof waxes;
+
 export type EmblemKey = keyof typeof emblems;
+
 export type StampKey = keyof typeof stamps;
+
 export type LinerKey = keyof typeof liners;
 
 export type Style = {
@@ -236,7 +243,8 @@ const bases = {
 
 export type ThemeKey = keyof typeof bases;
 
-export const themeKeys = Object.keys(bases) as ReadonlyArray<ThemeKey>; // SAFETY: the keys of a literal object
+// SAFETY: Object.keys of a literal object returns exactly its keys
+export const themeKeys = Object.keys(bases) as ReadonlyArray<ThemeKey>;
 
 export type Theme = Omit<Base, "style"> & {
   key: ThemeKey;
@@ -281,7 +289,8 @@ export function resolveTheme(key: ThemeKey, style: Partial<Style> = {}): Theme {
   const chosen: Style = { ...base.style, ...style };
 
   if (!inkFits(chosen.ink, chosen.paper)) {
-    const fitting = (Object.keys(inks) as InkKey[]).find((ink) => inkFits(ink, chosen.paper)); // SAFETY: the keys of a literal object
+    // SAFETY: Object.keys of a literal object returns exactly its keys
+    const fitting = (Object.keys(inks) as InkKey[]).find((ink) => inkFits(ink, chosen.paper));
     chosen.ink = fitting ?? chosen.ink;
   }
 

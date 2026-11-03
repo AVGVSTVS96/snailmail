@@ -16,7 +16,12 @@ const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], weight: ["400", "600"] });
 const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"], weight: "400" });
 const delafield = Mrs_Saint_Delafield({ variable: "--font-delafield", subsets: ["latin"], weight: "400" });
-const fell = IM_Fell_English({ variable: "--font-fell", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
+const fell = IM_Fell_English({
+  variable: "--font-fell",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+});
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -26,12 +31,29 @@ const cormorant = Cormorant_Garamond({
   preload: false,
 });
 
-const lazy = { subsets: ["latin"], preload: false } as const;
-const courier = Courier_Prime({ ...lazy, variable: "--font-courier", weight: ["400", "700"] });
-const newsreader = Newsreader({ ...lazy, variable: "--font-newsreader", style: ["normal", "italic"] });
-const garamond = EB_Garamond({ ...lazy, variable: "--font-garamond", style: ["normal", "italic"] });
-const madi = Ms_Madi({ ...lazy, variable: "--font-madi", weight: "400" });
-const pinyon = Pinyon_Script({ ...lazy, variable: "--font-pinyon", weight: "400" });
+const courier = Courier_Prime({
+  variable: "--font-courier",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  preload: false,
+});
+
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  preload: false,
+});
+
+const garamond = EB_Garamond({
+  variable: "--font-garamond",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  preload: false,
+});
+const madi = Ms_Madi({ variable: "--font-madi", subsets: ["latin"], weight: "400", preload: false });
+const pinyon = Pinyon_Script({ variable: "--font-pinyon", subsets: ["latin"], weight: "400", preload: false });
 
 export const fontVariables = [
   geist,

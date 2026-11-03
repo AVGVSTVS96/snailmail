@@ -3,6 +3,7 @@ import { fontVariables } from "@/lib/fonts";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
 import "./mail.css";
+import "./looks.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Envelope } from "@/components/mail/envelope";
 import { getLetter, toDelivery } from "@/lib/letters";
-import { themeStyle } from "@/lib/texture";
+import { deskProps } from "@/lib/texture";
 import "./film.css";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -25,7 +25,7 @@ async function Film({ token }: { token: string }) {
   const { theme, address, seed, initial } = toDelivery(letter);
 
   return (
-    <main className="desk film" style={themeStyle(theme)}>
+    <main className="desk film" {...deskProps(theme)}>
       <div className="film-stage">
         <div className="film-envelope">
           <Envelope
