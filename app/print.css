@@ -20,7 +20,8 @@
   .credit-site,
   .sheet::before,
   .sheet::after,
-  .sheet-content::before {
+  .sheet-content::before,
+  .sheet-content::after {
     display: none !important;
   }
   .reading,

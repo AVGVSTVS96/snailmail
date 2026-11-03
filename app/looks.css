@@ -103,15 +103,26 @@ html:has(.desk[data-theme="midnight"]) {
     0 1px 1px rgba(40, 40, 40, 0.12),
     0 16px 34px -12px rgba(40, 50, 60, 0.38);
 }
-.desk[data-light] .sheet {
-  box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.1),
-    0 18px 40px -10px rgba(30, 40, 60, 0.35);
+/* one soft light from above: a contact shadow, then a soft one that falls below */
+.desk {
+  --shadow-contact: 0 1px 1px rgba(0, 0, 0, 0.3);
+  --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.45);
+  --shadow-torn: 0 3px 3px -1px rgba(0, 0, 0, 0.32);
 }
-.desk[data-paper-dark] .sheet {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 20px 40px rgba(0, 0, 0, 0.6);
+.desk[data-light] {
+  --shadow-contact: 0 1px 1px rgba(0, 0, 0, 0.1);
+  --shadow-soft: 0 18px 40px -10px rgba(30, 40, 60, 0.35);
+  --shadow-torn: 0 3px 3px -1px rgba(30, 30, 20, 0.16);
+}
+.desk[data-paper-dark] {
+  --shadow-contact: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.6);
+  --shadow-torn: 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.desk:not([data-book]) .sheet,
+.desk .fold::before,
+.desk[data-book] .book-page {
+  box-shadow: var(--shadow-contact), var(--shadow-soft);
 }
 .desk[data-paper-dark] .sheet::before,
 .desk[data-paper-dark] .sheet::after,
@@ -131,43 +142,119 @@ html:has(.desk[data-theme="midnight"]) {
   margin-bottom: var(--letter-lh);
 }
 
+/* Deckle: the paper is a masked layer with torn edges, and a slightly smaller layer under it casts the shadow, so the light falls through the tears onto the desk */
+.desk[data-finish="deckle"] {
+  --deckle-sheet:
+    linear-gradient(#000 0 0) 50% 50% / calc(100% - 8px) calc(100% - 8px) no-repeat,
+    var(--deckle-top) 0 0 / 240px 5px repeat-x, var(--deckle-bottom) 0 100% / 240px 5px repeat-x,
+    var(--deckle-left) 0 0 / 5px 240px repeat-y, var(--deckle-right) 100% 0 / 5px 240px repeat-y;
+  --deckle-head:
+    linear-gradient(#000 0 0) 50% 100% / calc(100% - 8px) calc(100% - 4px) no-repeat,
+    var(--deckle-top) 0 0 / 240px 5px repeat-x, var(--deckle-left) 0 0 / 5px 240px repeat-y,
+    var(--deckle-right) 100% 0 / 5px 240px repeat-y;
+  --deckle-mid:
+    linear-gradient(#000 0 0) 50% 0 / calc(100% - 8px) 100% no-repeat,
+    var(--deckle-left) 0 calc(-1 * var(--panel)) / 5px 240px repeat-y,
+    var(--deckle-right) 100% calc(-1 * var(--panel)) / 5px 240px repeat-y;
+  --deckle-foot:
+    linear-gradient(#000 0 0) 50% 0 / calc(100% - 8px) calc(100% - 4px) no-repeat,
+    var(--deckle-bottom) 0 100% / 240px 5px repeat-x, var(--deckle-left) 0 calc(-2 * var(--panel)) / 5px 240px repeat-y,
+    var(--deckle-right) 100% calc(-2 * var(--panel)) / 5px 240px repeat-y;
+  --deckle-packet:
+    linear-gradient(#000 0 0) 50% 0 / calc(100% - 8px) calc(100% - 4px) no-repeat,
+    var(--deckle-bottom) 0 100% / 240px 5px repeat-x, var(--deckle-left) 0 0 / 5px 240px repeat-y,
+    var(--deckle-right) 100% 0 / 5px 240px repeat-y;
+}
 .desk[data-finish="deckle"] .sheet {
   background: none;
   box-shadow: none;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1)) drop-shadow(0 16px 24px rgba(30, 40, 60, 0.3));
+}
+.desk[data-finish="deckle"] .sheet::before,
+.desk[data-finish="deckle"] .sheet::after,
+.desk[data-finish="deckle"] .panel-mid::after,
+.desk[data-finish="deckle"] .panel-bot::before,
+.desk[data-finish="deckle"] .env-letter::after {
+  left: 4px;
+  right: 4px;
+  z-index: 1;
 }
 .desk[data-finish="deckle"] .sheet-content {
-  position: relative;
   isolation: isolate;
 }
-.desk[data-finish="deckle"] .sheet .sheet-content::before {
+.desk[data-finish="deckle"] .sheet .sheet-content::before,
+.desk[data-finish="deckle"] .env-letter::before,
+.desk[data-book][data-finish="deckle"] .book-page::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
+  border-radius: 5px;
   background-color: var(--paper);
   background-image: var(--paper-bg);
-  mask-image: var(--deckle);
-  mask-repeat: no-repeat, repeat-x, repeat-x, repeat-y, repeat-y;
-  mask-size:
-    calc(100% - 6px) calc(100% - 6px),
-    120px 4px,
-    120px 4px,
-    4px 120px,
-    4px 120px;
-  mask-position:
-    center,
-    0 0,
-    0 100%,
-    0 0,
-    100% 0;
+  mask: var(--deckle-sheet);
+}
+.desk[data-finish="deckle"] .sheet .sheet-content::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: -2;
+}
+.desk[data-finish="deckle"] .sheet .sheet-content::after,
+.desk[data-finish="deckle"] .fold::before {
+  inset: 4px;
+  box-shadow: var(--shadow-torn), var(--shadow-soft);
+}
+.desk[data-finish="deckle"] .env-letter {
+  isolation: isolate;
+  background: none;
+  box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.25);
+}
+.desk[data-finish="deckle"] .env-letter::before {
+  border-radius: 0 0 5px 5px;
+  mask: var(--deckle-packet);
+}
+.desk[data-finish="deckle"] .panel-mid {
+  box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.25);
+}
+.desk[data-finish="deckle"] .panel-top .face-front,
+.desk[data-finish="deckle"] .panel-bot .face-back {
+  border-radius: 5px 5px 0 0;
+  mask: var(--deckle-head);
+}
+.desk[data-finish="deckle"] .panel-mid .face-front {
+  mask: var(--deckle-mid);
+}
+.desk[data-finish="deckle"] .panel-bot .face-front {
+  border-radius: 0 0 5px 5px;
+  mask: var(--deckle-foot);
+}
+.desk[data-finish="deckle"] .panel-top .face-back {
+  border-radius: 0 0 5px 5px;
+  mask: var(--deckle-packet);
 }
 
+/* book pages: each page is the shadow, its paper reaches 4px past it, and the spine's shade lies on the desk */
 @media screen {
-  .desk[data-book][data-finish="deckle"] .sheet-content {
-    position: absolute;
+  .desk[data-book][data-finish="deckle"] .book {
+    background: linear-gradient(
+        90deg,
+        transparent calc(var(--half) - 60px),
+        rgba(0, 0, 0, 0.28) var(--half),
+        transparent calc(var(--half) + 60px)
+      )
+      0 0 / calc(2 * var(--half)) 100% repeat-x;
   }
-  .desk[data-book][data-finish="deckle"] .sheet .sheet-content::before {
+  .desk[data-book][data-finish="deckle"] .book-page {
+    isolation: isolate;
+    background: none;
+    box-shadow: var(--shadow-torn), var(--shadow-soft);
+  }
+  .desk[data-book][data-finish="deckle"] .book-page::before {
+    inset: -4px;
+    width: auto;
+  }
+  .desk[data-book][data-finish="deckle"] .sheet .sheet-content::before,
+  .desk[data-book][data-finish="deckle"] .sheet .sheet-content::after {
     display: none;
   }
 }

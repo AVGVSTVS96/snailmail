@@ -19,7 +19,12 @@ export function mottle(alpha: number, [r, g, b]: Rgb) {
 const laid =
   "repeating-linear-gradient(90deg, rgba(120,90,60,0) 0px, rgba(120,90,60,0) 5px, rgba(120,90,60,0.045) 5px, rgba(120,90,60,0.045) 6px)";
 
-function deckleEdge(width: number, height: number, seed: number) {
+type Edge = "top" | "bottom" | "left" | "right";
+
+const tile = 240;
+const depth = 5;
+
+function tornEdge(edge: Edge, seed: number) {
   let a = seed;
 
   const next = () => {
@@ -28,18 +33,46 @@ function deckleEdge(width: number, height: number, seed: number) {
     return a / 2147483647;
   };
 
-  const points = Array.from({ length: 31 }, (_, i) => `${((i * width) / 30).toFixed(1)},${(next() * 3).toFixed(1)}`);
+  let wander = 1.8;
+
+  const bites = Array.from({ length: tile / 2 }, () => {
+    wander = Math.min(2.8, Math.max(0.8, wander + (next() - 0.5) * 0.8));
+
+    return Math.min(3.6, Math.max(0.3, wander + (next() - 0.5) * 1.2));
+  });
+
+  bites.push(bites[0] ?? 1.8);
+
+  const place = (along: number, bite: number) => {
+    const [x, y] =
+      edge === "top"
+        ? [along, bite]
+        : edge === "bottom"
+          ? [along, depth - bite]
+          : edge === "left"
+            ? [bite, along]
+            : [depth - bite, along];
+
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  };
+
+  const fibres = bites.map((bite) => Math.max(0, bite - 0.3 - next() * 0.8));
+  fibres[fibres.length - 1] = fibres[0] ?? 0;
+  const line = (depths: number[]) => depths.map((bite, i) => place(i * 2, bite)).join(" L");
+  const inner = place(0, depth);
+  const innerEnd = place(tile, depth);
+  const [w, h] = edge === "top" || edge === "bottom" ? [tile, depth] : [depth, tile];
 
   return svgUrl(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'><path d='M0,${height} L${points.join(" L")} L${width},${height} Z' fill='#000'/></svg>`,
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><path d='M${inner} L${line(fibres)} L${innerEnd} Z' fill-opacity='0.4'/><path d='M${inner} L${line(bites)} L${innerEnd} Z'/></svg>`,
   );
 }
 
-const edge = deckleEdge(120, 4, 7);
-const side = deckleEdge(120, 4, 13);
-
-export const deckleMask = {
-  image: `linear-gradient(#000,#000), ${edge}, ${edge}, ${side}, ${side}`,
+const deckle = {
+  "--deckle-top": tornEdge("top", 7),
+  "--deckle-bottom": tornEdge("bottom", 11),
+  "--deckle-left": tornEdge("left", 13),
+  "--deckle-right": tornEdge("right", 17),
 };
 
 export function themeStyle(theme: Theme) {
@@ -49,7 +82,7 @@ export function themeStyle(theme: Theme) {
   const finish = theme.style.finish === "laid" ? `, ${laid}` : "";
   const surfaceTint: Rgb = theme.darkDesk ? [0.6, 0.55, 0.5] : [0.2, 0.2, 0.2];
 
-  return {
+  const style = {
     "--surface": theme.surface,
     "--surface-text": theme.surfaceText,
     "--envelope": theme.envelope,
@@ -58,7 +91,6 @@ export function themeStyle(theme: Theme) {
     "--ink-soft": theme.inkSoft,
     "--wax-hi": theme.waxHi,
     "--letter-face": theme.face,
-    "--deckle": deckleMask.image,
     "--sign-face": theme.signature.font,
     "--sign-scale": String(theme.signature.scale),
     "--sign-rotate": `${theme.signature.rotate}deg`,
@@ -67,6 +99,8 @@ export function themeStyle(theme: Theme) {
     "--paper-bg": `${grain(paperGrain, 0.9, theme.grain)}, ${mottle(paperMottle, theme.grain)}${finish}`,
     "--envelope-bg": `${grain(envelopeDark ? 0.07 : 0.12, 0.8, theme.grain)}, ${mottle(envelopeDark ? 0.008 : 0.03, theme.grain)}`,
   };
+
+  return theme.style.finish === "deckle" ? { ...style, ...deckle } : style;
 }
 
 export function deskProps(theme: Theme) {
