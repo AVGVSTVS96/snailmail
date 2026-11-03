@@ -22,8 +22,12 @@ type Props = {
   wasPublished: boolean;
   savedSlug: string | null;
   savedKey: string | null;
+  previewReady: boolean;
+  notify: boolean;
   onClose: () => void;
 };
+
+const previewWait = 90_000;
 
 export function PublishDialog({
   id,
@@ -36,9 +40,12 @@ export function PublishDialog({
   wasPublished,
   savedSlug,
   savedKey,
+  previewReady,
+  notify,
   onClose,
 }: Props) {
   const publish = useMutation(api.writer.publish);
+  const save = useMutation(api.writer.save);
   const unpublish = useMutation(api.writer.unpublish);
   const hosts = useHosts();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -52,6 +59,16 @@ export function PublishDialog({
   const [name, setName] = useState(savedSlug ?? "");
   const [privateLink, setPrivateLink] = useState(wasPublished ? savedKey !== null : true);
   const check = useQuery(api.writer.slugFree, editing && name ? { id, slug: name } : "skip");
+  const [waitedOut, setWaitedOut] = useState(false);
+
+  useEffect(() => {
+    if (previewReady) return;
+    const timer = setTimeout(() => setWaitedOut(true), previewWait);
+
+    return () => clearTimeout(timer);
+  }, [previewReady]);
+
+  const holding = !previewReady && !waitedOut;
 
   async function seal(slug: string, keep: boolean, exact: boolean) {
     try {
@@ -91,7 +108,10 @@ export function PublishDialog({
       <div className="w-dialog-body">
         <h2>{link ? "Sealed and ready to send" : problem ? "Not sealed yet" : "Sealing…"}</h2>
         <p className="w-dialog-line">
-          {problem || `${to || "They"} opens it at this link, on any phone. No account needed.`}
+          {problem ||
+            (holding
+              ? "Making its link preview, the envelope people see in Messages. It takes about half a minute."
+              : `${to || "They"} opens it at this link, on any phone. No account needed.`)}
         </p>
         {link && (
           <>
@@ -106,7 +126,7 @@ export function PublishDialog({
                   shown
                 )}
               </span>
-              <CopyButton text={url} className="w-button w-primary w-copy" label="Copy link" />
+              <CopyButton text={url} className="w-button w-primary w-copy" label="Copy link" disabled={holding} />
             </div>
             {hosts.root && (
               <div className="w-avail">
@@ -157,6 +177,17 @@ export function PublishDialog({
                 />
               </label>
             )}
+            <label className="w-toggle">
+              <span>
+                <span className="w-strong">Tell me when it's opened</span>
+                <span className="w-soft">One email, the first time {to || "they"} opens it</span>
+              </span>
+              <input
+                type="checkbox"
+                defaultChecked={notify}
+                onChange={(event) => void save({ id, notify: event.target.checked })}
+              />
+            </label>
           </>
         )}
         <div className="w-dialog-actions">
@@ -177,6 +208,7 @@ export function PublishDialog({
             <button
               type="button"
               className="w-button"
+              disabled={holding}
               onClick={() => void navigator.share({ title: `A letter for ${to}`, url }).catch(() => undefined)}
             >
               Share…

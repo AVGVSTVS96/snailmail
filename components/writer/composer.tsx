@@ -288,6 +288,8 @@ function Editor({ saved }: { saved: Saved }) {
           wasPublished={published}
           savedSlug={saved.slug}
           savedKey={saved.key}
+          previewReady={saved.previewReady}
+          notify={saved.notify}
           onClose={() => setPublishing(false)}
         />
       )}

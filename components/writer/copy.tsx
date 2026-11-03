@@ -6,10 +6,12 @@ export function CopyButton({
   text,
   label = "Copy link",
   className,
+  disabled = false,
 }: {
   text: string;
   label?: string;
   className?: string;
+  disabled?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -18,6 +20,7 @@ export function CopyButton({
       type="button"
       className={className ?? "w-icon-button"}
       aria-label={label}
+      disabled={disabled}
       title={copied ? "Copied" : label}
       onClick={(event) => {
         event.stopPropagation();
