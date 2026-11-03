@@ -320,46 +320,64 @@ export function Experience({ delivery }: { delivery: Delivery }) {
                 <SheetContent letter={letter} initial={initial} />
               </article>
               <div className="sealed-line">{delivery.sealedLine}</div>
-              <section className="keep">
-                <div className="keep-seal" aria-hidden>
-                  <HalfSeal theme={theme} initial={initial} seed={seed} side="left" className="keep-half keep-left" />
-                  <HalfSeal theme={theme} initial={initial} seed={seed} side="right" className="keep-half keep-right" />
+              <section className="end">
+                <div className="keep">
+                  <div className="keep-words">
+                    <div className="keep-seal" aria-hidden>
+                      <HalfSeal
+                        theme={theme}
+                        initial={initial}
+                        seed={seed}
+                        side="left"
+                        className="keep-half keep-left"
+                      />
+                      <HalfSeal
+                        theme={theme}
+                        initial={initial}
+                        seed={seed}
+                        side="right"
+                        className="keep-half keep-right"
+                      />
+                    </div>
+                    <h2 className="keep-title">Yours to keep.</h2>
+                    <p className="keep-text">
+                      {address.from} sealed this letter for you on {delivery.sealedOn}. Only people with this link can
+                      open it.
+                    </p>
+                  </div>
+                  <div className="keep-actions">
+                    <button type="button" className="keep-primary" onClick={() => window.print()}>
+                      <svg viewBox="0 0 24 24" aria-hidden>
+                        <path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" />
+                      </svg>
+                      Keep a copy
+                    </button>
+                    <button type="button" className="keep-secondary" onClick={again}>
+                      <svg viewBox="0 0 24 24" aria-hidden>
+                        <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" />
+                      </svg>
+                      Open it again
+                    </button>
+                    <p className="keep-note">Saves the letter as a PDF, just as it looks here</p>
+                  </div>
                 </div>
-                <h2 className="keep-title">Yours to keep.</h2>
-                <p className="keep-text">
-                  {address.from} sealed this letter for you on {delivery.sealedOn}. Only people with this link can open
-                  it.
-                </p>
-                <button type="button" className="keep-primary" onClick={() => window.print()}>
-                  <svg viewBox="0 0 24 24" aria-hidden>
-                    <path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" />
-                  </svg>
-                  Keep a copy
-                </button>
-                <button type="button" className="keep-secondary" onClick={again}>
-                  <svg viewBox="0 0 24 24" aria-hidden>
-                    <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" />
-                  </svg>
-                  Open it again
-                </button>
-                <p className="keep-note">Saves the letter as a PDF, just as it looks here</p>
+                <footer className="credit">
+                  <div className="credit-rule" />
+                  <div className="credit-label">MAIL ART INSPIRED BY</div>
+                  <a
+                    className="credit-title"
+                    href="https://www.penguin.co.uk/books/481503"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    The Art of Snail Mail
+                  </a>
+                  <div className="credit-by">by Martina Calvi · Quadrille, 2026</div>
+                  <Link className="credit-site" href="/">
+                    snailmail
+                  </Link>
+                </footer>
               </section>
-              <footer className="credit">
-                <div className="credit-rule" />
-                <div className="credit-label">MAIL ART INSPIRED BY</div>
-                <a
-                  className="credit-title"
-                  href="https://www.penguin.co.uk/books/481503"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  The Art of Snail Mail
-                </a>
-                <div className="credit-by">by Martina Calvi · Quadrille, 2026</div>
-                <Link className="credit-site" href="/">
-                  snailmail
-                </Link>
-              </footer>
             </>
           )}
         </section>

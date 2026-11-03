@@ -175,8 +175,8 @@ html:has(.desk) {
 }
 @media (min-width: 600px) and (min-height: 480px) {
   .ritual {
-    padding: max(clamp(30px, 10dvh, 92px), calc(env(safe-area-inset-top) + 24px)) 0
-      calc(clamp(44px, 10dvh, 104px) + env(safe-area-inset-bottom));
+    padding: max(clamp(30px, 10dvh - 30px, 92px), calc(env(safe-area-inset-top) + 20px)) 0
+      max(clamp(44px, 10dvh + 12px, 104px), calc(env(safe-area-inset-bottom) + 24px));
   }
 }
 @media (min-width: 1200px) and (min-height: 480px) {
@@ -598,19 +598,45 @@ html:has(.desk) {
   text-align: center;
 }
 
-.keep {
+.end {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: min(310px, calc(100vw - 48px));
-  margin-top: 120px;
+  width: 100%;
+  min-height: 100dvh;
+  padding-top: max(40px, calc(env(safe-area-inset-top) + 24px));
+}
+
+.keep {
+  --seal: 64px;
+  --title: 34px;
+  --line: 15px;
+  --line-lh: 22px;
+  --line-w: 290px;
+  --button-w: min(310px, calc(100vw - 48px));
+  --button-h: 54px;
+  --button-gap: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto 0;
   text-align: center;
+}
+.keep-words,
+.keep-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.keep-actions {
+  width: var(--button-w);
+  margin-top: 34px;
 }
 .keep-seal {
   position: relative;
-  width: 64px;
-  height: 64px;
-  margin-bottom: 26px;
+  width: var(--seal);
+  height: var(--seal);
+  margin-bottom: calc(var(--seal) * 0.4);
 }
 .keep-half {
   position: absolute;
@@ -626,15 +652,15 @@ html:has(.desk) {
   font-family: var(--font-cormorant);
   font-style: italic;
   font-weight: 500;
-  font-size: 34px;
-  line-height: 38px;
+  font-size: var(--title);
+  line-height: 1.12;
 }
 .keep-text {
   margin-top: 10px;
-  width: 290px;
-  max-width: 100%;
-  font-size: 15px;
-  line-height: 22px;
+  width: var(--line-w);
+  max-width: calc(100vw - 48px);
+  font-size: var(--line);
+  line-height: var(--line-lh);
   opacity: 0.72;
 }
 .keep-primary,
@@ -644,7 +670,7 @@ html:has(.desk) {
   justify-content: center;
   gap: 10px;
   width: 100%;
-  height: 54px;
+  height: var(--button-h);
   border-radius: 12px;
   font-size: 16px;
   cursor: pointer;
@@ -660,7 +686,6 @@ html:has(.desk) {
   stroke-linejoin: round;
 }
 .keep-primary {
-  margin-top: 34px;
   background: var(--envelope);
   color: var(--surface);
   font-weight: 600;
@@ -669,7 +694,7 @@ html:has(.desk) {
     0 8px 20px rgba(0, 0, 0, 0.35);
 }
 .keep-secondary {
-  margin-top: 12px;
+  margin-top: var(--button-gap);
   border: 1px solid rgba(233, 220, 198, 0.35);
   font-weight: 500;
 }
@@ -688,8 +713,7 @@ html:has(.desk) {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  margin-top: 110px;
-  padding-bottom: max(46px, calc(env(safe-area-inset-bottom) + 30px));
+  padding: 40px 0 max(46px, calc(env(safe-area-inset-bottom) + 30px));
   text-align: center;
 }
 .credit-rule {
@@ -722,6 +746,124 @@ html:has(.desk) {
   font-size: 11px;
   letter-spacing: 0.04em;
   opacity: 0.45;
+}
+
+/* stack on the Duo's cover and in Split View: the end fits one 580 screen */
+@media (max-width: 389px) {
+  .keep {
+    --seal: 56px;
+    --title: 32px;
+    --button-w: min(310px, calc(100vw - 72px));
+    --button-h: 50px;
+    --button-gap: 10px;
+  }
+  .keep-actions {
+    margin-top: 26px;
+  }
+  .credit {
+    padding: 28px 0 22px;
+  }
+  .credit-rule {
+    margin-bottom: 12px;
+  }
+  .credit-site {
+    margin-top: 10px;
+  }
+}
+
+/* side: words left, buttons right, the credit as one line under both */
+@media (orientation: landscape) and (max-height: 479px) {
+  .end {
+    padding: 28px 40px 0;
+  }
+  .keep {
+    --seal: 52px;
+    --title: 30px;
+    --line: 14px;
+    --line-lh: 21px;
+    --line-w: 250px;
+    --button-w: 236px;
+    --button-h: 48px;
+    --button-gap: 10px;
+    flex-direction: row;
+    align-items: center;
+    gap: 44px;
+  }
+  .keep-words {
+    width: 260px;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .keep-seal {
+    margin-bottom: 14px;
+  }
+  .keep-actions {
+    margin-top: 0;
+  }
+  .credit {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+    width: min(540px, 100%);
+    margin-top: 20px;
+    padding: 16px 0 22px;
+    border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  }
+  .credit-rule,
+  .credit-site {
+    display: none;
+  }
+  .credit-title {
+    font-size: 17px;
+    line-height: 20px;
+  }
+}
+
+/* table, the open Duo on its side: one column at the larger sizes */
+@media (min-width: 600px) and (min-height: 480px) {
+  .keep {
+    --seal: 76px;
+    --title: 40px;
+    --line: 17px;
+    --line-lh: 25px;
+    --line-w: 380px;
+    --button-w: 360px;
+    --button-h: 56px;
+  }
+}
+
+/* table, the open Duo held wide: split at the hinge, so nothing sits on the crease */
+@media (min-width: 600px) and (max-width: 1199px) and (min-height: 480px) and (orientation: landscape) {
+  .keep {
+    --seal: 72px;
+    --line: 16px;
+    --line-lh: 23.5px;
+    --line-w: 330px;
+    --button-w: 320px;
+    --button-h: 54px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+    width: 100%;
+  }
+  .keep-actions {
+    margin-top: 0;
+  }
+}
+
+/* desktop keeps the phone's column */
+@media (min-width: 1200px) and (min-height: 480px) {
+  .keep {
+    --seal: 64px;
+    --title: 34px;
+    --line: 15px;
+    --line-lh: 22px;
+    --line-w: 290px;
+    --button-w: 310px;
+    --button-h: 54px;
+  }
 }
 
 /* Motion */
@@ -882,8 +1024,7 @@ html:has(.desk) {
   .desk::before,
   .ritual,
   .sealed-line,
-  .keep,
-  .credit {
+  .end {
     display: none;
   }
   .reading {
