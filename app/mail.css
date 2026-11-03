@@ -731,7 +731,8 @@ html:has(.desk) {
   }
 }
 
-/* The letter as a book, half-folded or opened flat by unfolding: two facing pages, one per half, flowing across */
+/* The letter as a book, half-folded or opened flat by unfolding: two facing pages, one per half, flowing across. Held
+   wide the pages sit side by side; on its side the hinge runs across the middle, so they sit one above the other */
 @media screen {
   .desk[data-book] {
     --page-m: 36px;
@@ -740,6 +741,12 @@ html:has(.desk) {
     --book-bottom: max(28px, calc(env(safe-area-inset-bottom) + 6px));
     --letter-size: 22px;
     --letter-lh: 34px;
+  }
+  .desk[data-book="tall"] {
+    --crease: 50dvh;
+    --page-gap: 20px;
+    --page-w: calc(100vw - 2 * var(--page-m));
+    --page-h: calc(min(var(--crease) - var(--book-top), 100dvh - var(--book-bottom) - var(--crease)) - var(--page-gap));
   }
   :where(.desk[data-book]) {
     .reading {
@@ -766,10 +773,6 @@ html:has(.desk) {
     }
     .book-page {
       position: absolute;
-      top: var(--book-top);
-      bottom: var(--book-bottom);
-      left: calc(var(--i) * var(--half) + var(--page-m));
-      width: calc(var(--half) - 2 * var(--page-m));
       background-color: var(--paper);
       background-image: var(--paper-bg);
       box-shadow:
@@ -788,6 +791,29 @@ html:has(.desk) {
       color: var(--ink-soft);
       opacity: 0.7;
     }
+    .book-page:nth-child(odd) {
+      scroll-snap-align: start;
+      scroll-margin-left: var(--page-m);
+    }
+    .book .sheet-content {
+      position: absolute;
+      padding: 34px var(--page-pad) 44px;
+      column-fill: auto;
+    }
+    .book[data-balanced] .sheet-content {
+      column-fill: balance;
+    }
+    .book .sheet-sign {
+      break-inside: avoid;
+    }
+  }
+  :where(.desk[data-book="wide"]) {
+    .book-page {
+      top: var(--book-top);
+      bottom: var(--book-bottom);
+      left: calc(var(--i) * var(--half) + var(--page-m));
+      width: calc(var(--half) - 2 * var(--page-m));
+    }
     .book-page:nth-child(even)::before {
       content: "";
       position: absolute;
@@ -798,24 +824,65 @@ html:has(.desk) {
       z-index: -1;
       background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.28) 50%, transparent);
     }
-    .book-page:nth-child(odd) {
-      scroll-snap-align: start;
-      scroll-margin-left: var(--page-m);
-    }
     .book .sheet-content {
-      position: absolute;
       top: var(--book-top);
       left: var(--page-m);
       width: calc(2 * var(--half) - 2 * var(--page-m));
       height: calc(100dvh - var(--book-top) - var(--book-bottom));
-      padding: 34px var(--page-pad) 44px;
       column-count: 2;
       column-gap: calc(2 * (var(--page-m) + var(--page-pad)));
-      column-fill: auto;
     }
-    .book .sheet-sign {
-      break-inside: avoid;
+  }
+  /* Each page is a window onto one flow of columns a page apart, showing the column with its number */
+  :where(.desk[data-book="tall"]) {
+    .sheet {
+      background: linear-gradient(
+        transparent calc(var(--crease) - 60px),
+        rgba(0, 0, 0, 0.28) var(--crease),
+        transparent calc(var(--crease) + 60px)
+      );
     }
+    .book-page {
+      left: calc(var(--spread) * 100vw + var(--page-m));
+      width: var(--page-w);
+      height: var(--page-h);
+      overflow: hidden;
+    }
+    .book-page:nth-child(odd) {
+      top: calc(var(--crease) - var(--page-gap) - var(--page-h));
+    }
+    .book-page:nth-child(even) {
+      top: calc(var(--crease) + var(--page-gap));
+    }
+    .book .sheet-content {
+      top: 0;
+      left: calc(var(--i) * -1 * var(--page-w));
+      width: var(--page-w);
+      height: 100%;
+      column-width: calc(var(--page-w) - 2 * var(--page-pad));
+      column-gap: calc(2 * var(--page-pad));
+    }
+    .book[data-balanced] .sheet-content {
+      width: calc(2 * var(--page-w));
+      column-count: 2;
+    }
+  }
+}
+@media (vertical-viewport-segments: 2) {
+  .desk[data-book="tall"] {
+    --crease: calc((env(viewport-segment-bottom 0 0) + env(viewport-segment-top 0 1)) / 2);
+  }
+}
+/* On its side the book has no sheet of its own, so print takes the first page's flow and drops the rest */
+@media print {
+  .book-page:first-child {
+    display: contents;
+  }
+  .book-page:not(:first-child) {
+    display: none;
+  }
+  .book-page::after {
+    content: none;
   }
 }
 

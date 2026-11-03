@@ -30,8 +30,11 @@ export type Delivery = {
 const holdMs = 900;
 const ringLength = 2 * Math.PI * 46;
 
-const halfFoldedQuery = "(min-width: 600px) and (min-height: 480px) and (horizontal-viewport-segments: 2)";
-const wideQuery = "(min-width: 600px) and (min-height: 480px) and (orientation: landscape)";
+const tableQuery = "(min-width: 600px) and (min-height: 480px)";
+const halfFoldedQuery = `${tableQuery} and (horizontal-viewport-segments: 2)`;
+const halfFoldedTallQuery = `${tableQuery} and (vertical-viewport-segments: 2)`;
+const wideQuery = `${tableQuery} and (orientation: landscape)`;
+const tallQuery = `${tableQuery} and (orientation: portrait)`;
 const foldableKey = "snailmail:foldable";
 
 const autoDelays: Partial<Record<Stage, number>> = { front: 450, back: 900, open: 1350 };
@@ -71,12 +74,14 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   const [holding, setHolding] = useState(false);
   const reduced = useMedia("(prefers-reduced-motion: reduce)");
   const halfFolded = useMedia(halfFoldedQuery);
+  const halfFoldedTall = useMedia(halfFoldedTallQuery);
   const wide = useMedia(wideQuery);
+  const tall = useMedia(tallQuery);
   const [opening, setOpening] = useState(false);
   const [refolding, setRefolding] = useState(false);
   const [resealed, setResealed] = useState(false);
   const [unfoldedHere, setUnfoldedHere] = useState(false);
-  const [spreads, setSpreads] = useState(1);
+  const [pages, setPages] = useState(2);
   const ring = useRef<SVGCircleElement>(null);
   const envelopeLetter = useRef<HTMLDivElement>(null);
   const source = useRef<DOMRect | null>(null);
@@ -99,14 +104,18 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   );
 
   const foldable = unfoldedHere || foldableBefore;
-  const book = halfFolded || (foldable && wide);
+  const book = halfFolded || (foldable && wide) ? "wide" : halfFoldedTall || (foldable && tall) ? "tall" : undefined;
+  const spreads = Math.ceil(pages / 2);
 
   useEffect(() => {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme.surface);
   }, [theme.surface]);
 
   const autoUnfold = useEffectEvent(() => unfold());
-  const finishUnfold = useEffectEvent(() => (refolding ? reseal() : change(() => setStage("read"), reduced || book)));
+
+  const finishUnfold = useEffectEvent(() =>
+    refolding ? reseal() : change(() => setStage("read"), reduced || book !== undefined),
+  );
 
   useEffect(() => {
     if (stage !== "open") return;
@@ -210,7 +219,9 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
 
     const count = () => {
       const end = content.lastElementChild?.getBoundingClientRect().right ?? 0;
-      setSpreads(Math.max(1, Math.ceil((end - box.getBoundingClientRect().left) / innerWidth)));
+      const page = book === "wide" ? innerWidth / 2 : (box.querySelector(".book-page")?.clientWidth ?? 0);
+
+      if (page > 0) setPages(Math.max(1, Math.ceil((end - content.getBoundingClientRect().left) / page)));
     };
 
     const observer = new ResizeObserver(count);
@@ -218,7 +229,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     void document.fonts.ready.then(count);
 
     return () => observer.disconnect();
-  }, [book, stage]);
+  }, [book, stage, pages]);
 
   function load() {
     loading.current ??= fetch(`/l/${token}/letter`, { method: "POST", cache: "no-store" })
@@ -379,7 +390,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
           : [];
 
   return (
-    <main className="desk" {...deskProps(theme)} data-stage={stage} data-book={book || undefined}>
+    <main className="desk" {...deskProps(theme)} data-stage={stage} data-book={book}>
       {ritual && (
         <section
           ref={scene}
@@ -503,17 +514,27 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
           ) : (
             <>
               <article className="sheet" aria-label={`A letter from ${address.from}`}>
-                <div className="book" ref={track} style={{ "--spreads": spreads }}>
+                <div
+                  className="book"
+                  ref={track}
+                  style={{ "--spreads": spreads }}
+                  data-balanced={(book && pages <= 2) || undefined}
+                >
                   {book &&
                     Array.from({ length: spreads * 2 }, (_, i) => (
                       <div
                         key={i}
                         className="book-page"
-                        style={{ "--i": i }}
+                        style={{ "--i": i, "--spread": Math.floor(i / 2) }}
                         data-folio={`${i + 1} / ${spreads * 2}`}
-                      />
+                        inert={(book === "tall" && i > 0) || undefined}
+                      >
+                        {book === "tall" && (
+                          <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />
+                        )}
+                      </div>
                     ))}
-                  <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />
+                  {book !== "tall" && <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />}
                 </div>
               </article>
               <div className="sealed-line">{delivery.sealedLine}</div>
