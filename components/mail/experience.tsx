@@ -28,17 +28,17 @@ export type Delivery = {
 const holdMs = 900;
 const ringLength = 2 * Math.PI * 46;
 
-function subscribeMotion(onChange: () => void) {
-  const query = matchMedia("(prefers-reduced-motion: reduce)");
-  query.addEventListener("change", onChange);
+const bookQuery = "(min-width: 600px) and (min-height: 480px) and (horizontal-viewport-segments: 2)";
 
-  return () => query.removeEventListener("change", onChange);
-}
-
-function useReducedMotion() {
+function useMedia(query: string) {
   return useSyncExternalStore(
-    subscribeMotion,
-    () => matchMedia("(prefers-reduced-motion: reduce)").matches,
+    (onChange) => {
+      const list = matchMedia(query);
+      list.addEventListener("change", onChange);
+
+      return () => list.removeEventListener("change", onChange);
+    },
+    () => matchMedia(query).matches,
     () => false,
   );
 }
@@ -60,13 +60,16 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   const [stage, setStage] = useState<Stage>(start);
   const [run, setRun] = useState(0);
   const [holding, setHolding] = useState(false);
-  const reduced = useReducedMotion();
+  const reduced = useMedia("(prefers-reduced-motion: reduce)");
+  const book = useMedia(bookQuery);
+  const [spreads, setSpreads] = useState(1);
   const ring = useRef<SVGCircleElement>(null);
   const envelopeLetter = useRef<HTMLDivElement>(null);
   const source = useRef<DOMRect | null>(null);
   const fold = useRef<HTMLDivElement>(null);
   const scene = useRef<HTMLElement>(null);
   const stageArea = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
   const storageKey = `snailmail:read:${token}`;
 
   const readBefore = useSyncExternalStore(
@@ -142,6 +145,24 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
       .querySelector(".env-letter-note")
       ?.animate([{ transform: `scaleY(${scaleX / scaleY})` }, { transform: "none" }], timing);
   }, [stage, reduced]);
+
+  useEffect(() => {
+    const content = track.current?.querySelector(".sheet-content");
+
+    if (!book || stage !== "read" || !track.current || !content) return;
+    const box = track.current;
+
+    const count = () => {
+      const end = content.lastElementChild?.getBoundingClientRect().right ?? 0;
+      setSpreads(Math.max(1, Math.ceil((end - box.getBoundingClientRect().left) / innerWidth)));
+    };
+
+    const observer = new ResizeObserver(count);
+    observer.observe(content);
+    void document.fonts.ready.then(count);
+
+    return () => observer.disconnect();
+  }, [book, stage]);
 
   function change(update: () => void) {
     if (!reduced || !("startViewTransition" in document)) return update();
@@ -357,7 +378,18 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
           ) : (
             <>
               <article className="sheet" aria-label={`A letter from ${address.from}`}>
-                <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />
+                <div className="book" ref={track} style={{ "--spreads": spreads }}>
+                  {book &&
+                    Array.from({ length: spreads * 2 }, (_, i) => (
+                      <div
+                        key={i}
+                        className="book-page"
+                        style={{ "--i": i }}
+                        data-folio={`${i + 1} / ${spreads * 2}`}
+                      />
+                    ))}
+                  <SheetContent letter={letter} initial={initial} theme={theme} seed={seed} />
+                </div>
               </article>
               <div className="sealed-line">{delivery.sealedLine}</div>
               <section className="end">

@@ -676,6 +676,120 @@ html:has(.desk) {
     1px 1px 0 rgba(0, 0, 0, 0.24);
 }
 
+/* spread: the open Duo half-folded like a book. Two facing pages, one per half, the letter flowing across */
+@media (min-width: 600px) and (min-height: 480px) and (horizontal-viewport-segments: 2) {
+  .desk {
+    --half: env(viewport-segment-width 0 0, 50vw);
+    --page-m: 36px;
+    --page-pad: 36px;
+    --book-top: max(28px, calc(env(safe-area-inset-top) + 20px));
+    --book-bottom: max(28px, calc(env(safe-area-inset-bottom) + 6px));
+    --env-w: min(400px, calc(var(--half) - 80px));
+    --letter-size: 22px;
+    --letter-lh: 34px;
+  }
+  .ritual {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto auto 1fr;
+    grid-template-areas: ". stage" "label stage" "hint stage" ". stage";
+    align-items: center;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .ritual-stage {
+    grid-area: stage;
+    height: 100%;
+  }
+  .ritual-label,
+  .ritual-hint {
+    justify-self: start;
+    margin-left: 64px;
+  }
+  .ritual-label {
+    grid-area: label;
+    height: auto;
+    margin-bottom: 26px;
+  }
+  .ritual-hint {
+    grid-area: hint;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .reading {
+    padding-top: 0;
+  }
+  .sheet {
+    width: 100vw;
+    height: 100dvh;
+    overflow: auto hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    background: none;
+    box-shadow: none;
+  }
+  .sheet::before,
+  .sheet::after {
+    display: none;
+  }
+  .book {
+    position: relative;
+    width: calc(var(--spreads) * 100vw);
+    height: 100%;
+  }
+  .book-page {
+    position: absolute;
+    top: var(--book-top);
+    bottom: var(--book-bottom);
+    left: calc(var(--i) * var(--half) + var(--page-m));
+    width: calc(var(--half) - 2 * var(--page-m));
+    background-color: var(--paper);
+    background-image: var(--paper-bg);
+    box-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.3),
+      0 16px 30px rgba(0, 0, 0, 0.4);
+  }
+  .book-page::after {
+    content: attr(data-folio);
+    position: absolute;
+    bottom: 14px;
+    width: 100%;
+    font-family: var(--font-geist-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-align: center;
+    color: var(--ink-soft);
+    opacity: 0.7;
+  }
+  .book-page:nth-child(even)::before {
+    content: "";
+    position: absolute;
+    top: calc(-1 * var(--book-top));
+    bottom: calc(-1 * var(--book-bottom));
+    left: calc(-1 * var(--page-m) - 60px);
+    width: 120px;
+    z-index: -1;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.28) 50%, transparent);
+  }
+  .book-page:nth-child(odd) {
+    scroll-snap-align: start;
+    scroll-margin-left: var(--page-m);
+  }
+  .book .sheet-content {
+    position: absolute;
+    top: var(--book-top);
+    left: var(--page-m);
+    width: calc(2 * var(--half) - 2 * var(--page-m));
+    height: calc(100dvh - var(--book-top) - var(--book-bottom));
+    padding: 34px var(--page-pad) 44px;
+    column-count: 2;
+    column-gap: calc(2 * (var(--page-m) + var(--page-pad)));
+    column-fill: auto;
+  }
+  .book .sheet-sign {
+    break-inside: avoid;
+  }
+}
+
 .sealed-line {
   margin: 56px 0 0;
   font-family: var(--font-geist-mono);
