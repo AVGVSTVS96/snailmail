@@ -1,0 +1,74 @@
+/* Safari prints repeating gradients with transparent stops as solid black, so the textured paper stays on screen and print wins over every theme. A fixed layer repeats on every page, so it is the paper */
+@media print {
+  @page {
+    margin: 0;
+  }
+  html:has(.desk) {
+    background: none !important;
+  }
+  .desk {
+    min-height: 0;
+    color: var(--ink);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .desk::before {
+    background: var(--paper);
+  }
+  .ritual,
+  .keep,
+  .credit-site,
+  .sheet::before,
+  .sheet::after,
+  .sheet-content::before {
+    display: none !important;
+  }
+  .reading,
+  .end {
+    display: block;
+    min-height: 0;
+    padding: 0;
+  }
+  .sheet {
+    width: 100%;
+    background: none;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+  .sheet-content {
+    padding: 0.6in 0.9in 0;
+  }
+  .sheet-p {
+    orphans: 3;
+    widows: 3;
+  }
+  .desk :is(.sheet-sign, .sheet-drawn)[data-waiting]:not([data-shown]) {
+    clip-path: none;
+  }
+  :is(.sheet-sign, .sheet-drawn, .sheet-sprig) {
+    break-inside: avoid;
+  }
+  .emboss {
+    border: 1px solid var(--ink-soft);
+    box-shadow: none;
+    color: var(--ink-soft);
+    text-shadow: none;
+  }
+  .sealed-line {
+    margin-top: 40px;
+    color: var(--ink-soft);
+    opacity: 1;
+    break-after: avoid;
+  }
+  .credit {
+    padding: 24px 0 0.5in;
+    color: var(--ink-soft);
+    break-inside: avoid;
+  }
+  .credit-rule {
+    background: var(--ink-soft);
+  }
+  .credit :is(.credit-label, .credit-by) {
+    opacity: 1;
+  }
+}

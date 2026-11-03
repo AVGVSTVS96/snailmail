@@ -4,6 +4,7 @@ import { siteUrl } from "@/lib/site";
 import "./globals.css";
 import "./mail.css";
 import "./looks.css";
+import "./print.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
