@@ -168,3 +168,13 @@ export const seal = internalMutation({
     return token;
   },
 });
+
+export const resetOpens = internalMutation({
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    const letter = await byToken(ctx, token);
+
+    if (!letter) throw new Error("No letter with that token");
+    await ctx.db.patch(letter._id, { opens: 0, openedAt: undefined });
+  },
+});

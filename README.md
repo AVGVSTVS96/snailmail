@@ -40,7 +40,7 @@ bunx convex run letters:seal '{"theme":"keepsake","to":"June","toPlace":"Brookly
 bun run preview <token> --base http://localhost:3000   # renders its link preview
 ```
 
-Paragraphs in `body` are separated by blank lines.
+Paragraphs in `body` are separated by blank lines. After testing a letter's link yourself while signed out, `bunx convex run letters:resetOpens '{"token":"<token>"}'` sets its open count back to zero, so its first real open still sends the email.
 
 `bun run check` runs oxlint (with [anti-slop](https://github.com/dmmulroy/anti-slop)'s rules, vendored in `tools/oxlint/anti-slop`), oxfmt and TypeScript.
 
