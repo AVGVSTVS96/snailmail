@@ -241,7 +241,7 @@ html:has(.desk[data-theme="midnight"]) {
 
 /* book pages: each page is the shadow, its paper reaches 4px past it, and the spine's shade lies on the desk */
 @media screen {
-  .desk[data-book][data-finish="deckle"] .book {
+  .desk[data-book="wide"][data-finish="deckle"] .book {
     background: linear-gradient(
         90deg,
         transparent calc(var(--half) - 60px),
