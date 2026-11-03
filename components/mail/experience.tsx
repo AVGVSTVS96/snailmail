@@ -92,6 +92,16 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     return () => clearTimeout(timer);
   }, [stage]);
 
+  const refit = useEffectEvent(() => fitOpenEnvelope());
+
+  useEffect(() => {
+    if (stage !== "open" || !stageArea.current) return;
+    const observer = new ResizeObserver(refit);
+    observer.observe(stageArea.current);
+
+    return () => observer.disconnect();
+  }, [stage]);
+
   useEffect(() => {
     if (stage !== "unfold") return;
     const timer = setTimeout(finishUnfold, reduced ? 350 : 1550);
