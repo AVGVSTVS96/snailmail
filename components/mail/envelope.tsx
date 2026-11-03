@@ -195,7 +195,7 @@ function Grain({ id, theme }: { id: string; theme: Theme }) {
   );
 }
 
-function Liner({ id, theme }: { id: string; theme: Theme }) {
+export function Liner({ id, theme }: { id: string; theme: Theme }) {
   const c = theme.liner;
   const i = theme.linerInk;
   const kind = theme.style.liner;
