@@ -102,15 +102,17 @@ export function Experience({ delivery }: { delivery: Delivery }) {
     if (stage !== "unfold" || !from || !target || !fold.current || reduced) return;
     const scaleX = from.width / target.width;
     const scaleY = from.height / target.height;
+    const x = from.left + from.width / 2 - (target.left + target.width / 2);
+    const y = from.top + from.height / 2 - (target.top + target.height / 2);
+    const timing = { duration: 600, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
+
     fold.current.animate(
-      [
-        {
-          transform: `translate(${from.left - target.left}px, ${from.top - target.top}px) scale(${scaleX}, ${scaleY})`,
-        },
-        { transform: "none" },
-      ],
-      { duration: 600, easing: "cubic-bezier(.22,1,.36,1)" },
+      [{ transform: `translate(${x}px, ${y}px) rotate(-1deg) scale(${scaleX}, ${scaleY})` }, { transform: "none" }],
+      timing,
     );
+    fold.current
+      .querySelector(".env-letter-note")
+      ?.animate([{ transform: `scaleY(${scaleX / scaleY})` }, { transform: "none" }], timing);
   }, [stage, reduced]);
 
   function fillRing(full: boolean) {
