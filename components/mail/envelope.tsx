@@ -40,9 +40,11 @@ function Front({ theme, address }: { theme: Theme; address: Address }) {
       <g transform={`translate(${W - 18 - 62} 18) rotate(2.5 30 36)`}>
         <Stamp theme={theme} />
       </g>
-      <g className="postmark" transform={`translate(${W - 60 - 150} 26) rotate(-9 75 34)`}>
-        <g opacity="0.72">
-          <Postmark ink={theme.postmarkInk} {...address.postmark} />
+      <g transform={`translate(${W - 60 - 150} 26) rotate(-9 75 34)`}>
+        <g className="postmark">
+          <g opacity="0.72">
+            <Postmark ink={theme.postmarkInk} {...address.postmark} />
+          </g>
         </g>
       </g>
       <text x={W * 0.27} y="153" className="font-delafield" fontSize="62" fill={theme.ink}>
