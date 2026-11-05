@@ -94,7 +94,7 @@
   }
 }
 
-/* side: a phone, or the Duo's cover, on its side */
+/* side: a short, wide screen */
 @media (orientation: landscape) and (max-height: 479px) {
   .desk {
     --env-w: min(400px, calc((100dvh - 110px) / 0.68), calc(100vw - 222px));
@@ -106,7 +106,7 @@
   }
 }
 
-/* table: the open Duo, tablets, desktop */
+/* table: 600 wide and 480 tall or more */
 @media (min-width: 600px) and (min-height: 480px) {
   .desk {
     --env-w: min(600px, calc(100vw - 110px), calc((100dvh - 230px) / 0.68));
@@ -849,7 +849,7 @@ html:has(.desk) {
   opacity: 0.45;
 }
 
-/* stack on the Duo's cover and in Split View: the end fits one 580 screen */
+/* stack on narrow screens: the end fits one 580 screen */
 @media (max-width: 389px) {
   .keep {
     --seal: 56px;
@@ -921,7 +921,7 @@ html:has(.desk) {
   }
 }
 
-/* table, the open Duo on its side: one column at the larger sizes */
+/* table: one column at the larger sizes */
 @media (min-width: 600px) and (min-height: 480px) {
   .keep {
     --seal: 76px;
@@ -931,26 +931,6 @@ html:has(.desk) {
     --line-w: 380px;
     --button-w: 360px;
     --button-h: 56px;
-  }
-}
-
-/* table, the open Duo held wide: split at the hinge, so nothing sits on the crease */
-@media (min-width: 600px) and (max-width: 1199px) and (min-height: 480px) and (orientation: landscape) {
-  .keep {
-    --seal: 72px;
-    --line: 16px;
-    --line-lh: 23.5px;
-    --line-w: 330px;
-    --button-w: 320px;
-    --button-h: 54px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    justify-items: center;
-    width: 100%;
-  }
-  .keep-actions {
-    margin-top: 0;
   }
 }
 

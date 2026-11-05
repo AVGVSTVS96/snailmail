@@ -1,16 +1,6 @@
 export type Fold = "unfold" | "fold";
 
-declare global {
-  interface Navigator {
-    devicePosture?: { type: "continuous" | "folded" };
-  }
-
-  interface Window {
-    viewport?: { segments: DOMRect[] | null };
-  }
-}
-
-type Viewport = { short: number; sideways: boolean; screen: string; outgrows: boolean; folded: boolean };
+type Viewport = { short: number; sideways: boolean; screen: string; outgrows: boolean };
 
 const jump = 1.3;
 const settleMs = 250;
@@ -26,15 +16,14 @@ function measure(): Viewport {
     sideways: clientWidth > clientHeight,
     screen: screenSides.join("x"),
     outgrows: Math.max(clientWidth, clientHeight) > screenSides[1] + 1,
-    folded: navigator.devicePosture?.type === "folded" || (window.viewport?.segments?.length ?? 1) > 1,
   };
 }
 
-// The page changed screens when the screen's size changes (Chrome on Android), when the page outgrows or fits back into
-// a screen size the browser never updates (Safari on the iPhone Duo reports the cover's size on both screens), or when
-// Device Posture or Viewport Segments report a fold. Rotations keep the short side and keyboards keep the screen.
+// The page changed screens when the screen's size changes (Chrome on Android), or when the page outgrows or fits back
+// into a screen size the browser never updates (Safari on the iPhone Duo reports the cover's size on both screens).
+// Only sizes count, never fold or hinge APIs. Rotations keep the short side and keyboards keep the screen.
 function classify(from: Viewport, to: Viewport): Fold | null {
-  const moved = from.screen !== to.screen || from.outgrows !== to.outgrows || from.folded || to.folded;
+  const moved = from.screen !== to.screen || from.outgrows !== to.outgrows;
 
   if (!moved) return null;
 
