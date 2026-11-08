@@ -4,6 +4,9 @@ import type { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const next = request.nextUrl.searchParams.get("next");
+  const url = new URL(await getSignInUrl({ returnTo: next?.startsWith("/letters") ? next : "/letters" }));
 
-  redirect(await getSignInUrl({ returnTo: next?.startsWith("/letters") ? next : "/letters" }));
+  url.searchParams.set("provider", "GoogleOAuth");
+  url.searchParams.delete("screen_hint");
+  redirect(url.href);
 }
