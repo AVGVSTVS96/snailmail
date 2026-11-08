@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 
 import { Experience } from "@/components/mail/experience";
-import { toDelivery } from "@/lib/letters";
+import { toDelivery } from "@/lib/delivery";
 import type { OpenedLetter } from "@/lib/letters";
 import { absolute } from "@/lib/site";
 import { resolveTheme } from "@/lib/theme";

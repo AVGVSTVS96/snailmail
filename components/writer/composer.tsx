@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 
 import type { Stage } from "@/components/mail/experience";
-import { seedFrom } from "@/components/mail/seal";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { seedFrom } from "@/lib/delivery";
 import { toDelivery } from "@/lib/delivery";
 import { deskProps } from "@/lib/texture";
 import { defaultStyle, resolveTheme } from "@/lib/theme";

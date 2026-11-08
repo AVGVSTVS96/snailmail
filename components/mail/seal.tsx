@@ -224,13 +224,3 @@ export const HalfSeal = ({
     </svg>
   );
 };
-
-export const seedFrom = (text: string) => {
-  let h = 2_166_136_261;
-
-  for (const char of text) {
-    h = Math.imul(h ^ char.charCodeAt(0), 16_777_619);
-  }
-
-  return h >>> 0;
-};

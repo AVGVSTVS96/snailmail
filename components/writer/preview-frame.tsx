@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import type { Delivery, Stage } from "@/components/mail/experience";
+import type { Stage } from "@/components/mail/experience";
+import type { Delivery } from "@/lib/delivery";
 
 import type { PreviewMessage } from "./preview";
 

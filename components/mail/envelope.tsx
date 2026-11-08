@@ -1,5 +1,6 @@
 import { useId } from "react";
 
+import type { Address } from "@/lib/delivery";
 import type { Theme } from "@/lib/theme";
 
 import { HalfSeal, WaxSeal } from "./seal";
@@ -9,14 +10,6 @@ export const W = 346;
 export const H = 235;
 const flapH = 141;
 const vee = H * 0.46;
-
-export interface Address {
-  to: string;
-  toPlace: string;
-  from: string;
-  openWhen: string | null;
-  postmark: { city: string; date: string; year: string };
-}
 
 const AddressName = ({ theme, to }: { theme: Theme; to: string }) => {
   const x = W * 0.27;

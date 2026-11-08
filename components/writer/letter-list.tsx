@@ -5,8 +5,8 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { seedFrom } from "@/components/mail/seal";
 import { api } from "@/convex/_generated/api";
+import { seedFrom } from "@/lib/delivery";
 import { letterLink } from "@/lib/links";
 import { resolveTheme } from "@/lib/theme";
 

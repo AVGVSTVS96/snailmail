@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 
 import { Experience } from "@/components/mail/experience";
-import type { Delivery, Stage } from "@/components/mail/experience";
+import type { Stage } from "@/components/mail/experience";
+import type { Delivery } from "@/lib/delivery";
 
 export interface PreviewMessage {
   kind: "snailmail-preview";

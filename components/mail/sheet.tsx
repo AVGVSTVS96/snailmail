@@ -1,20 +1,11 @@
 import type { ReactNode } from "react";
 
+import type { Letter } from "@/lib/delivery";
 import type { Theme } from "@/lib/theme";
 
 import { WaxSeal } from "./seal";
 import { Emboss, Sprig } from "./stationery";
 import { VoiceNote } from "./voice-note";
-
-export interface Letter {
-  body: string;
-  from: string;
-  date: string;
-  signature?: string | null;
-  voice?: { url: string; seconds: number } | null;
-}
-
-export type Words = Pick<Letter, "body" | "signature" | "voice">;
 
 export const paragraphs = (body: string) => body.split(/\n\s*\n/).filter((p) => p.trim() !== "");
 

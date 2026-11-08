@@ -1,3 +1,4 @@
+import "server-only";
 import { fetchMutation } from "convex/nextjs";
 import { headers } from "next/headers";
 import { connection } from "next/server";
@@ -7,8 +8,6 @@ import { api } from "@/convex/_generated/api";
 import { serverSecret } from "@/convex/secret";
 
 import { scraperAgent } from "./crawlers";
-
-export { toDelivery } from "./delivery";
 
 const linkToken = /^[\w-]{22}$/;
 

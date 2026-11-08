@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { Envelope } from "@/components/mail/envelope";
-import { getLetter, toDelivery } from "@/lib/letters";
+import { toDelivery } from "@/lib/delivery";
+import { getLetter } from "@/lib/letters";
 import { deskProps } from "@/lib/texture";
 
 import "./film.css";

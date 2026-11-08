@@ -1,3 +1,4 @@
+import "server-only";
 import { fetchMutation } from "convex/nextjs";
 import { cacheLife } from "next/cache";
 

@@ -11,32 +11,17 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 
+import type { Delivery, Words } from "@/lib/delivery";
 import { looksFoldable, watchFold } from "@/lib/fold";
 import { tap } from "@/lib/haptics";
 import { deskProps } from "@/lib/texture";
 import type { Theme } from "@/lib/theme";
 
 import { Envelope } from "./envelope";
-import type { Address } from "./envelope";
 import { HalfSeal } from "./seal";
 import { SheetContent } from "./sheet";
-import type { Letter, Words } from "./sheet";
 
 export type Stage = "front" | "back" | "open" | "unfold" | "read";
-
-export interface Delivery {
-  token: string;
-  theme: Theme;
-  address: Address;
-  letter: Omit<Letter, keyof Words>;
-  words?: Words;
-  seed: number;
-  initial: string;
-  arrived: string;
-  signedFrom: string;
-  sealedLine: string;
-  sealedOn: string;
-}
 
 const holdMs = 900;
 const ringLength = 2 * Math.PI * 46;
