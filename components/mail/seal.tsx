@@ -16,8 +16,9 @@ const random = (seed: number) => {
 };
 
 const blob = (cx: number, cy: number, r: number, seed: number) => {
-  const next = random(seed);
-  const phase = [next(), next(), next(), next()].map((p) => p * Math.PI * 2);
+  const draw = random(seed);
+  const turn = () => draw() * Math.PI * 2;
+  const phase = [turn(), turn(), turn(), turn()] as const;
 
   const points = Array.from({ length: 72 }, (_, i) => {
     const a = (i / 72) * Math.PI * 2;
@@ -40,8 +41,10 @@ const center = size / 2;
 const radius = size * 0.44;
 const inner = radius * 0.66;
 
+const crackStart = [center - 2, center - radius] as const;
+
 const crack: readonly (readonly [number, number])[] = [
-  [center - 2, center - radius],
+  crackStart,
   [center + 3, center - radius * 0.45],
   [center - 3, center - radius * 0.05],
   [center + 4, center + radius * 0.4],
@@ -215,7 +218,7 @@ export const HalfSeal = ({
       <g clipPath={`url(#${id})`}>
         <SealBody theme={theme} initial={initial} seed={seed} />
         <path
-          d={`M${crack[0][0]},${crack[0][1]} ${crackPath}`}
+          d={`M${crackStart[0]},${crackStart[1]} ${crackPath}`}
           fill="none"
           stroke={theme.waxLo}
           strokeWidth="1.6"

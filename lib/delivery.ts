@@ -1,3 +1,5 @@
+import { z } from "zod/mini";
+
 import { resolveTheme } from "./theme";
 import type { Style, Theme, ThemeKey } from "./theme";
 
@@ -9,15 +11,15 @@ export interface Address {
   postmark: { city: string; date: string; year: string };
 }
 
-export interface Letter {
-  body: string;
-  from: string;
-  date: string;
-  signature?: string | null;
-  voice?: { url: string; seconds: number } | null;
-}
+export const Words = z.object({
+  body: z.string(),
+  signature: z.optional(z.nullable(z.string())),
+  voice: z.optional(z.nullable(z.object({ url: z.string(), seconds: z.number() }))),
+});
 
-export type Words = Pick<Letter, "body" | "signature" | "voice">;
+export type Words = z.infer<typeof Words>;
+
+export type Letter = Words & { from: string; date: string };
 
 export interface Delivery {
   token: string;

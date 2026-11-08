@@ -1,5 +1,5 @@
 import { fetchMutation } from "convex/nextjs";
-import { z } from "zod";
+import { z } from "zod/mini";
 
 import { api } from "@/convex/_generated/api";
 import { film } from "@/lib/film";

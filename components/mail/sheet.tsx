@@ -10,7 +10,7 @@ import { VoiceNote } from "./voice-note";
 export const paragraphs = (body: string) => body.split(/\n\s*\n/u).filter((p) => p.trim() !== "");
 
 export const inline = (text: string): ReactNode[] =>
-  text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/u).map((part, i) => {
+  text.split(/(?<marked>\*\*[^*]+\*\*|\*[^*]+\*)/u).map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
       return <strong key={i}>{part.slice(2, -2)}</strong>;
     }
@@ -53,13 +53,15 @@ export const SheetContent = ({ letter, initial, theme, seed = 7 }: SheetProps) =
   const closing = last !== undefined && last.length <= closingLength ? last : null;
   const body = closing === null ? all : all.slice(0, -1);
 
-  const signature = letter.signature ? (
-    <svg className="sheet-drawn" viewBox="0 0 300 120" role="img" aria-label={letter.from}>
-      <path d={letter.signature} />
-    </svg>
-  ) : (
-    <div className="sheet-sign">{letter.from}</div>
-  );
+  const signature =
+    letter.signature !== undefined && letter.signature !== null && letter.signature !== "" ? (
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- the drawn signature is an inline path, and role="img" names it for screen readers
+      <svg className="sheet-drawn" viewBox="0 0 300 120" role="img" aria-label={letter.from}>
+        <path d={letter.signature} />
+      </svg>
+    ) : (
+      <div className="sheet-sign">{letter.from}</div>
+    );
 
   return (
     <div className="sheet-content">

@@ -41,7 +41,7 @@ export const SealedEnvelope = ({
         <path d={`${edge} Z`} fill="rgba(0,0,0,0.12)" transform="translate(0,3)" />
         <path d={`${edge} Z`} fill={theme.envelopeShade} />
         <path d={edge} fill="none" stroke="rgba(255,255,255,0.4)" />
-        {from && (
+        {from !== null && from !== "" && (
           <text
             x={W / 2}
             y={H * 0.86}

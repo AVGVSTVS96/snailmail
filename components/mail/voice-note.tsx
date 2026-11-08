@@ -62,6 +62,7 @@ export const VoiceNote = ({ url, seconds }: { url: string; seconds: number }) =>
         ))}
       </svg>
       <span className="voice-time">{duration(seconds)}</span>
+      {/* oxlint-disable-next-line jsx-a11y/media-has-caption -- a writer's spoken voice note has no caption track to offer */}
       <audio
         ref={audio}
         src={url}

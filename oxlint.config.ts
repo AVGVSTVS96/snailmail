@@ -6,7 +6,8 @@ import react from "ultracite/oxlint/react";
 
 const effects = {
   importNames: ["useEffect", "useLayoutEffect", "useInsertionEffect"],
-  message: "Derive in render, act in the event handler, or subscribe with useSyncExternalStore.",
+  message:
+    "Derive in render, act in the event handler, or use useSubscription, useImperative or useBeforePaint from @/lib/outside.",
   name: "react",
 };
 
@@ -43,6 +44,10 @@ export default defineConfig({
           },
         ],
       },
+    },
+    {
+      files: ["lib/outside.ts"],
+      rules: { "no-restricted-imports": "off", "react/exhaustive-deps": "off" },
     },
   ],
   rules: {

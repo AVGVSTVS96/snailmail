@@ -11,11 +11,11 @@ const perforations = () => {
   const down = Math.floor(stampH / 7.68);
   const holes: (readonly [number, number])[] = [];
 
-  for (let i = 0; i <= across; i++) {
+  for (let i = 0; i <= across; i += 1) {
     holes.push([(i * stampW) / across, 0], [(i * stampW) / across, stampH]);
   }
 
-  for (let i = 0; i <= down; i++) {
+  for (let i = 0; i <= down; i += 1) {
     holes.push([0, (i * stampH) / down], [stampW, (i * stampH) / down]);
   }
 

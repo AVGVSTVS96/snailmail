@@ -121,7 +121,7 @@ const Front = ({ theme, address }: { theme: Theme; address: Address }) => {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 size-full" aria-hidden>
       {theme.airmail && <Airmail theme={theme} />}
-      {address.openWhen && (
+      {address.openWhen !== null && address.openWhen !== "" && (
         <g>
           <text
             x="24"
@@ -168,6 +168,22 @@ const Front = ({ theme, address }: { theme: Theme; address: Address }) => {
         </g>
       )}
     </svg>
+  );
+};
+
+const Grain = ({ id, theme }: { id: string; theme: Theme }) => {
+  const [r, g, b] = theme.grain;
+
+  return (
+    <filter id={id} x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" result="n" />
+      <feColorMatrix
+        in="n"
+        values={`0 0 0 0 ${r} 0 0 0 0 ${g} 0 0 0 0 ${b} 0 0 0 0.14 0`}
+        result="c"
+      />
+      <feComposite in="c" in2="SourceAlpha" operator="in" />
+    </filter>
   );
 };
 
@@ -218,22 +234,6 @@ const Pocket = ({ theme, from }: { theme: Theme; from: string }) => {
         from {from}
       </text>
     </svg>
-  );
-};
-
-const Grain = ({ id, theme }: { id: string; theme: Theme }) => {
-  const [r, g, b] = theme.grain;
-
-  return (
-    <filter id={id} x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" result="n" />
-      <feColorMatrix
-        in="n"
-        values={`0 0 0 0 ${r} 0 0 0 0 ${g} 0 0 0 0 ${b} 0 0 0 0.14 0`}
-        result="c"
-      />
-      <feComposite in="c" in2="SourceAlpha" operator="in" />
-    </filter>
   );
 };
 
@@ -369,19 +369,9 @@ interface EnvelopeProps {
   seed: number;
   initial: string;
   seal?: React.ReactNode;
-  letterRef?: React.Ref<HTMLDivElement>;
-  onLetter?: () => void;
 }
 
-export const Envelope = ({
-  theme,
-  address,
-  seed,
-  initial,
-  seal,
-  letterRef,
-  onLetter,
-}: EnvelopeProps) => (
+export const Envelope = ({ theme, address, seed, initial, seal }: EnvelopeProps) => (
   <div className="envelope">
     <div className="env-mover">
       <div className="env-flipper">
@@ -390,7 +380,7 @@ export const Envelope = ({
         </div>
         <div className="env-face env-back">
           <Inside theme={theme} />
-          <div className="env-letter" ref={letterRef} onClick={onLetter}>
+          <div className="env-letter">
             <div className="env-letter-note font-caveat">for {address.to}</div>
           </div>
           <Pocket theme={theme} from={address.from} />
