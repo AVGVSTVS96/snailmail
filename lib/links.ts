@@ -1,6 +1,6 @@
-import { siteUrl } from "./site";
+import { present, siteUrl } from "./site";
 
-export const rootDomain = process.env.SNAILMAIL_ROOT_DOMAIN || null;
+export const rootDomain = present(process.env.SNAILMAIL_ROOT_DOMAIN);
 
 export interface Hosts {
   root: string | null;
@@ -13,7 +13,7 @@ export const letterLink = (
   { token, slug, key }: { token: string; slug: string | null; key: string | null },
   { root, site }: Hosts = hosts,
 ) => {
-  if (!root || !slug) {
+  if (root === null || slug === null || slug === "") {
     return new URL(`/l/${token}`, site).href;
   }
 

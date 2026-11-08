@@ -1,7 +1,13 @@
-export const serverSecret = () => {
-  const value = process.env.SNAILMAIL_RENDER_SECRET;
+export const setting = (name: string) => {
+  const value = process.env[name];
 
-  if (!value) {
+  return value === undefined || value === "" ? null : value;
+};
+
+export const serverSecret = () => {
+  const value = setting("SNAILMAIL_RENDER_SECRET");
+
+  if (value === null) {
     throw new Error("SNAILMAIL_RENDER_SECRET is not set");
   }
 

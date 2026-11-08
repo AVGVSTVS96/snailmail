@@ -3,30 +3,31 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { unindexed } from "@/lib/crawlers";
+import { rootDomain } from "@/lib/links";
 
-const root = process.env.SNAILMAIL_ROOT_DOMAIN?.toLowerCase();
+const root = rootDomain?.toLowerCase() ?? null;
 
 const letterSlug = (host: string | null) => {
   const name = host?.toLowerCase();
 
-  if (!root || !name?.endsWith(`.${root}`)) {
+  if (root === null || name?.endsWith(`.${root}`) !== true) {
     return null;
   }
 
   const slug = name.slice(0, -root.length - 1);
 
-  return /^[a-z0-9-]+$/.test(slug) && slug !== "www" ? slug : null;
+  return /^[a-z0-9-]+$/u.test(slug) && slug !== "www" ? slug : null;
 };
 
 const proxy = async (request: NextRequest) => {
   const { pathname } = request.nextUrl;
   const slug = letterSlug(request.headers.get("host"));
 
-  if (slug) {
-    const key = /^\/([a-z0-9]{0,12})$/.exec(pathname)?.[1];
+  if (slug !== null) {
+    const key = /^\/(?<key>[a-z0-9]{0,12})$/u.exec(pathname)?.groups?.key;
 
     const url = request.nextUrl.clone();
-    url.pathname = key ? `/s/${slug}/${key}` : `/s/${slug}`;
+    url.pathname = key === undefined || key === "" ? `/s/${slug}` : `/s/${slug}/${key}`;
     const response = key === undefined ? NextResponse.next() : NextResponse.rewrite(url);
     response.headers.set("X-Robots-Tag", unindexed);
 

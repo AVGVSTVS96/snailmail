@@ -1,20 +1,23 @@
 import "server-only";
 import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 import chromium from "@sparticuz/chromium";
 import ffmpeg from "ffmpeg-static";
 import { chromium as playwright } from "playwright-core";
 import type { Page } from "playwright-core";
 
+import { present } from "./site";
+
 const fps = 30;
 const seconds = 5;
 const posterAt = 1500;
 
 const launch = async () => {
-  if (!process.env.VERCEL) {
+  if (present(process.env.VERCEL) === null) {
     return await playwright.launch();
   }
 
@@ -24,21 +27,22 @@ const launch = async () => {
   });
 };
 
-const seek = async (page: Page, ms: number) =>
+const seek = async (page: Page, ms: number) => {
   await page.evaluate((t) => {
     for (const animation of document.getAnimations()) {
       animation.pause();
       animation.currentTime = t;
     }
   }, ms);
+};
 
 const encode = async (page: Page) => {
-  if (!ffmpeg) {
+  if (ffmpeg === null) {
     throw new Error("No ffmpeg binary for this platform");
   }
 
-  const dir = await mkdtemp(join(tmpdir(), "snailmail-"));
-  const file = join(dir, "envelope.mp4");
+  const dir = await mkdtemp(path.join(tmpdir(), "snailmail-"));
+  const file = path.join(dir, "envelope.mp4");
 
   try {
     const encoder = spawn(
@@ -71,20 +75,19 @@ const encode = async (page: Page) => {
       { stdio: ["pipe", "ignore", "inherit"] },
     );
 
-    const done = new Promise<void>((resolve, reject) => {
-      encoder.on("error", reject);
-      encoder.on("close", (code) => {
-        code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`));
-      });
-    });
+    const closed = once(encoder, "close");
 
-    for (let frame = 0; frame < fps * seconds; frame++) {
+    for (let frame = 0; frame < fps * seconds; frame += 1) {
       await seek(page, (frame * 1000) / fps);
       encoder.stdin.write(await page.screenshot({ type: "jpeg", quality: 95 }));
     }
 
     encoder.stdin.end();
-    await done;
+    await closed;
+
+    if (encoder.exitCode !== 0) {
+      throw new Error(`ffmpeg exited ${String(encoder.exitCode)}`);
+    }
 
     return await readFile(file);
   } finally {
@@ -103,7 +106,7 @@ export const film = async (url: string) => {
 
     const response = await page.goto(url, { waitUntil: "networkidle" });
 
-    if (!response?.ok()) {
+    if (response?.ok() !== true) {
       throw new Error(`${url} answered ${response?.status()}`);
     }
 

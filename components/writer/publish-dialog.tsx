@@ -87,7 +87,7 @@ export const PublishDialog = ({
     } catch (error) {
       setProblem(
         error instanceof Error
-          ? error.message.replace(/^.*ConvexError: /, "").replace(/\s+at .*$/s, "")
+          ? error.message.replace(/^.*ConvexError: /u, "").replace(/\s+at .*$/su, "")
           : "",
       );
     }
@@ -108,7 +108,7 @@ export const PublishDialog = ({
   }, []);
 
   const url = link ? letterLink({ token, slug: link.slug, key: link.key }, hosts) : "";
-  const shown = url.replace(/^https?:\/\//, "");
+  const shown = url.replace(/^https?:\/\//u, "");
   const host = link?.slug && hosts.root ? `${link.slug}.${hosts.root}` : null;
 
   return (

@@ -11,8 +11,8 @@ const toHtml = (body: string) => {
   const blocks = paragraphs(body).map(
     (p) =>
       `<p>${escape(p)
-        .replaceAll(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
-        .replaceAll(/\*([^*]+)\*/g, "<i>$1</i>")
+        .replaceAll(/\*\*([^*]+)\*\*/gu, "<b>$1</b>")
+        .replaceAll(/\*([^*]+)\*/gu, "<i>$1</i>")
         .replaceAll("\n", "<br>")}</p>`,
   );
 
@@ -81,14 +81,14 @@ const toBody = (root: HTMLElement) => {
 
   return blocks
     .flatMap((block) => {
-      const clean = block.replace(/\n+$/, "").replaceAll("\u00A0", " ");
+      const clean = block.replace(/\n+$/u, "").replaceAll("\u00A0", " ");
 
       return clean.trim() === "" ? [] : [clean];
     })
     .join("\n\n");
 };
 
-export const words = (body: string) => body.split(/\s+/).filter((word) => /\w/.test(word)).length;
+export const words = (body: string) => body.split(/\s+/u).filter((word) => /\w/u.test(word)).length;
 
 export const PaperEditor = ({
   body,

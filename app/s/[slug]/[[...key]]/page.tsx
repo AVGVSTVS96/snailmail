@@ -23,8 +23,11 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
   return letterMetadata(letter, letterLink({ token: letter?.token ?? "", slug, key }));
 };
 
-export const generateViewport = async ({ params }: Props): Promise<Viewport> =>
-  letterViewport((await find(params)).letter);
+export const generateViewport = async ({ params }: Props): Promise<Viewport> => {
+  const { letter } = await find(params);
+
+  return letterViewport(letter);
+};
 
 const SlugPage = ({ params }: Props) => (
   <Suspense fallback={<main className="desk" {...deskProps(keepsake)} />}>

@@ -1,9 +1,8 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { execFileSync } from "node:child_process";
 
 const [token, ...flags] = process.argv.slice(2);
 
-if (!token) {
+if (token === undefined || token === "") {
   throw new Error("Usage: bun scripts/preview.ts <token> [--prod] [--base http://localhost:3000]");
 }
 
@@ -13,17 +12,15 @@ const base = flags.includes("--base")
   ? flags[flags.indexOf("--base") + 1]
   : "http://localhost:3000";
 
-const { stdout } = await promisify(execFile)("bunx", [
-  "convex",
-  "env",
-  "get",
-  ...(prod ? ["--prod"] : []),
-  "SNAILMAIL_RENDER_SECRET",
-]);
+const secret = execFileSync(
+  "bunx",
+  ["convex", "env", "get", ...(prod ? ["--prod"] : []), "SNAILMAIL_RENDER_SECRET"],
+  { encoding: "utf-8" },
+).trim();
 
 const response = await fetch(new URL(`/api/render/${encodeURIComponent(token)}`, base), {
   method: "POST",
-  headers: { Authorization: `Bearer ${stdout.trim()}` },
+  headers: { Authorization: `Bearer ${secret}` },
 });
 
 if (!response.ok) {

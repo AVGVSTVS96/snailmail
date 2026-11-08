@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 
 import { internalAction, mutation } from "./_generated/server";
-import { authorize, serverSecret } from "./secret";
+import { authorize, serverSecret, setting } from "./secret";
 
 export const uploadUrl = mutation({
   args: { secret: v.string() },
@@ -13,21 +13,28 @@ export const uploadUrl = mutation({
 });
 
 export const attach = mutation({
-  args: { secret: v.string(), token: v.string(), image: v.id("_storage"), video: v.id("_storage") },
-  handler: async (ctx, { token, image, video, ...args }) => {
+  args: { secret: v.string(), token: v.string(), image: v.string(), video: v.string() },
+  handler: async (ctx, { token, ...args }) => {
     authorize(args.secret);
+
+    const image = ctx.db.system.normalizeId("_storage", args.image);
+    const video = ctx.db.system.normalizeId("_storage", args.video);
+
+    if (image === null || video === null) {
+      throw new Error("Not a stored file");
+    }
 
     const letter = await ctx.db
       .query("letters")
       .withIndex("by_token", (q) => q.eq("token", token))
       .unique();
 
-    if (!letter) {
+    if (letter === null) {
       throw new Error("No letter with that token");
     }
 
     for (const old of [letter.image, letter.video]) {
-      if (old) {
+      if (old !== undefined) {
         await ctx.storage.delete(old);
       }
     }
@@ -39,9 +46,9 @@ export const attach = mutation({
 export const request = internalAction({
   args: { token: v.string() },
   handler: async (_ctx, { token }) => {
-    const site = process.env.SNAILMAIL_SITE_URL;
+    const site = setting("SNAILMAIL_SITE_URL");
 
-    if (!site) {
+    if (site === null) {
       throw new Error("SNAILMAIL_SITE_URL is not set");
     }
 
@@ -54,6 +61,8 @@ export const request = internalAction({
       throw new Error(`Render failed with ${response.status}: ${await response.text()}`);
     }
 
-    return await response.json();
+    const rendered: unknown = await response.json();
+
+    return rendered;
   },
 });

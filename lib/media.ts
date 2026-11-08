@@ -19,14 +19,14 @@ const stored = async (_id: string, url: string) => {
 };
 
 const byteRange = (header: string | null, size: number) => {
-  const match = header?.match(/^bytes=(\d*)-(\d*)$/);
+  const { from, to } = header?.match(/^bytes=(?<from>\d*)-(?<to>\d*)$/u)?.groups ?? {};
 
-  if (!match || (match[1] === "" && match[2] === "")) {
+  if (from === undefined || to === undefined || (from === "" && to === "")) {
     return null;
   }
 
-  const start = match[1] === "" ? Math.max(0, size - Number(match[2])) : Number(match[1]);
-  const end = match[1] === "" || match[2] === "" ? size - 1 : Math.min(Number(match[2]), size - 1);
+  const start = from === "" ? Math.max(0, size - Number(to)) : Number(from);
+  const end = from === "" || to === "" ? size - 1 : Math.min(Number(to), size - 1);
 
   return start <= end && start < size ? { start, end } : "unsatisfiable";
 };

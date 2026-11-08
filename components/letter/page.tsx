@@ -25,8 +25,10 @@ export const letterMetadata = (letter: OpenedLetter | null, url: string): Metada
 
   const title = `A letter for ${letter.to}`;
   const media = `/l/${letter.token}`;
-  const image = letter.image ? absolute(`${media}/envelope.jpg?v=${letter.image}`) : null;
-  const video = letter.video ? absolute(`${media}/envelope.mp4?v=${letter.video}`) : null;
+
+  const image = letter.image === null ? null : absolute(`${media}/envelope.jpg?v=${letter.image}`);
+
+  const video = letter.video === null ? null : absolute(`${media}/envelope.mp4?v=${letter.video}`);
 
   return {
     title,
@@ -39,21 +41,23 @@ export const letterMetadata = (letter: OpenedLetter | null, url: string): Metada
       title,
       description,
       url,
-      images: image
-        ? [
-            {
-              url: image,
-              secureUrl: image,
-              type: "image/jpeg",
-              width: 1200,
-              height: 630,
-              alt: `A sealed envelope addressed to ${letter.to}`,
-            },
-          ]
-        : undefined,
-      videos: video
-        ? [{ url: video, secureUrl: video, type: "video/mp4", width: 1200, height: 630 }]
-        : undefined,
+      images:
+        image === null
+          ? undefined
+          : [
+              {
+                url: image,
+                secureUrl: image,
+                type: "image/jpeg",
+                width: 1200,
+                height: 630,
+                alt: `A sealed envelope addressed to ${letter.to}`,
+              },
+            ],
+      videos:
+        video === null
+          ? undefined
+          : [{ url: video, secureUrl: video, type: "video/mp4", width: 1200, height: 630 }],
     },
     twitter: { card: "summary_large_image", title, description },
   };

@@ -146,7 +146,7 @@ export const LetterList = () => {
                               event.stopPropagation();
                             }}
                           >
-                            {link.replace(/^https?:\/\//, "")}
+                            {link.replace(/^https?:\/\//u, "")}
                           </a>
                           <CopyButton text={link} />
                         </span>

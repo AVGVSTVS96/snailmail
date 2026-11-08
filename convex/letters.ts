@@ -13,7 +13,7 @@ const missesAllowed = 20;
 export const newToken = () => {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
 
-  return btoa(String.fromCharCode(...bytes))
+  return btoa(String.fromCodePoint(...bytes))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
     .replaceAll("=", "");
@@ -48,11 +48,9 @@ const guarded = async (
     return letter;
   }
 
-  if (misses) {
-    await ctx.db.patch(misses._id, recent ? { count: recent + 1 } : { count: 1, since: now });
-  } else {
-    await ctx.db.insert("misses", { visitor, count: 1, since: now });
-  }
+  await (misses
+    ? ctx.db.patch(misses._id, recent ? { count: recent + 1 } : { count: 1, since: now })
+    : ctx.db.insert("misses", { visitor, count: 1, since: now }));
 
   return null;
 };
@@ -145,7 +143,8 @@ export const read = mutation({
     return {
       body: letter.body,
       signature: letter.signature ?? null,
-      voice: letter.voice && voiceUrl ? { url: voiceUrl, seconds: letter.voice.seconds } : null,
+      voice:
+        letter.voice && voiceUrl !== null ? { url: voiceUrl, seconds: letter.voice.seconds } : null,
     };
   },
 });
@@ -160,9 +159,9 @@ export const preview = mutation({
     }
 
     const id = letter[kind];
-    const url = id ? await ctx.storage.getUrl(id) : null;
+    const url = id === undefined ? null : await ctx.storage.getUrl(id);
 
-    return id && url ? { id, url } : null;
+    return id !== undefined && url !== null ? { id, url } : null;
   },
 });
 

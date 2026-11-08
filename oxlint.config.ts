@@ -23,6 +23,10 @@ export default defineConfig({
   options: { reportUnusedDisableDirectives: "error", typeAware: true },
   overrides: [
     {
+      files: ["lib/delivery.ts", "components/mail/seal.tsx"],
+      rules: { "eslint/no-bitwise": "off" },
+    },
+    {
       files: ["lib/**"],
       rules: {
         "no-restricted-imports": [
@@ -42,6 +46,7 @@ export default defineConfig({
     },
   ],
   rules: {
+    "eslint/no-await-in-loop": "off",
     "eslint/sort-keys": "off",
     "import/no-cycle": "error",
     "no-comments/no-comments": "error",

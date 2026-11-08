@@ -13,16 +13,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, noarchive: true, noimageindex: true },
 };
 
-const FilmPage = ({ params }: PageProps<"/l/[token]/film">) => (
-  <Suspense>
-    {params.then(({ token }) => (
-      <Film token={token} />
-    ))}
-  </Suspense>
-);
-
-export default FilmPage;
-
 const Film = async ({ token }: { token: string }) => {
   const letter = await getLetter(token);
 
@@ -74,3 +64,13 @@ const Film = async ({ token }: { token: string }) => {
     </main>
   );
 };
+
+const FilmPage = ({ params }: PageProps<"/l/[token]/film">) => (
+  <Suspense>
+    {params.then(({ token }) => (
+      <Film token={token} />
+    ))}
+  </Suspense>
+);
+
+export default FilmPage;

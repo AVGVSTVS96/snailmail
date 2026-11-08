@@ -24,7 +24,7 @@ export interface Delivery {
   theme: Theme;
   address: Address;
   letter: Omit<Letter, keyof Words>;
-  words?: Words;
+  words?: Words | undefined;
   seed: number;
   initial: string;
   arrived: string;
@@ -37,7 +37,7 @@ export const seedFrom = (text: string) => {
   let h = 2_166_136_261;
 
   for (const char of text) {
-    h = Math.imul(h ^ char.charCodeAt(0), 16_777_619);
+    h = Math.imul(h ^ (char.codePointAt(0) ?? 0), 16_777_619);
   }
 
   return h >>> 0;
@@ -83,18 +83,20 @@ export const toDelivery = (letter: LetterFields, words?: Words): Delivery => {
       to: letter.to,
       toPlace: letter.toPlace,
       from: letter.from,
-      openWhen: letter.openWhen || null,
+      openWhen: letter.openWhen === "" ? null : letter.openWhen,
       postmark: { city, date: `${short} ${day}`, year },
     },
     letter: { from: letter.from, date: `${day} ${month} ${year}` },
     words,
     seed: seedFrom(letter.token),
-    initial: (letter.initial || letter.from.trim().slice(0, 1) || "S").toUpperCase(),
+    initial: (
+      [letter.initial ?? "", letter.from.trim().slice(0, 1)].find((first) => first !== "") ?? "S"
+    ).toUpperCase(),
     arrived: `A LETTER ARRIVED · ${day} ${short}`,
-    signedFrom: city ? `from ${letter.from}, sealed in ${letter.city}` : `from ${letter.from}`,
-    sealedLine: city
-      ? `SEALED ${day} ${short} ${year} · ${city}`
-      : `SEALED ${day} ${short} ${year}`,
+    signedFrom:
+      city === "" ? `from ${letter.from}` : `from ${letter.from}, sealed in ${letter.city}`,
+    sealedLine:
+      city === "" ? `SEALED ${day} ${short} ${year}` : `SEALED ${day} ${short} ${year} · ${city}`,
     sealedOn: `${day} ${month} ${year}`,
   };
 };

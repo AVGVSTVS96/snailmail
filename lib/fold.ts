@@ -1,6 +1,6 @@
 export type Fold = "unfold" | "fold";
 
-interface Viewport {
+export interface Viewport {
   short: number;
   sideways: boolean;
   screen: string;
@@ -20,14 +20,11 @@ const measure = (): Viewport => {
     short: Math.min(clientWidth, clientHeight),
     sideways: clientWidth > clientHeight,
     screen: screenSides.join("x"),
-    outgrows: Math.max(clientWidth, clientHeight) > screenSides[1] + 1,
+    outgrows: Math.max(clientWidth, clientHeight) > (screenSides[1] ?? 0) + 1,
   };
 };
 
-// The page changed screens when the screen's size changes (Chrome on Android), or when the page outgrows or fits back
-// into a screen size the browser never updates (Safari on the iPhone Duo reports the cover's size on both screens).
-// Only sizes count, never fold or hinge APIs. Rotations keep the short side and keyboards keep the screen.
-const classify = (from: Viewport, to: Viewport): Fold | null => {
+export const classify = (from: Viewport, to: Viewport): Fold | null => {
   const moved = from.screen !== to.screen || from.outgrows !== to.outgrows;
 
   if (!moved) {
@@ -45,8 +42,6 @@ const classify = (from: Viewport, to: Viewport): Fold | null => {
   return null;
 };
 
-// Safari on an iPhone Duo reports the cover's screen on both screens, so the page fits neither of its sides. On other
-// iPhones the page spans one side of the screen it reports.
 export const looksFoldable = () => {
   const { clientWidth } = document.documentElement;
 
@@ -57,10 +52,6 @@ export const looksFoldable = () => {
 };
 
 export const watchFold = (onFold: (fold: Fold) => void) => {
-  if (!matchMedia("(pointer: coarse)").matches) {
-    return () => {};
-  }
-
   let from = measure();
   let settle: ReturnType<typeof setTimeout> | undefined;
   let burst: ReturnType<typeof setTimeout> | undefined;
@@ -73,8 +64,6 @@ export const watchFold = (onFold: (fold: Fold) => void) => {
     onFold(fold);
   };
 
-  // Unfolded on its side, the iPhone Duo first shows the open screen still sideways and turns it upright about a second
-  // later, so an unfold that keeps the page sideways counts once the page has turned, or once it clearly won't.
   const check = () => {
     const to = measure();
     const fold = classify(from, to);
@@ -83,7 +72,9 @@ export const watchFold = (onFold: (fold: Fold) => void) => {
       return;
     }
 
-    if (fold === "unfold" && from.sideways && to.sideways) {
+    const unfoldStillSideways = fold === "unfold" && from.sideways && to.sideways;
+
+    if (unfoldStillSideways) {
       turn ??= setTimeout(() => {
         turn = undefined;
         const now = measure();
@@ -103,10 +94,14 @@ export const watchFold = (onFold: (fold: Fold) => void) => {
     clearTimeout(settle);
     clearTimeout(burst);
     settle = setTimeout(check, settleMs);
-    burst = setTimeout(() => (from = measure()), burstMs);
+    burst = setTimeout(() => {
+      from = measure();
+    }, burstMs);
   };
 
-  addEventListener("resize", resize);
+  if (matchMedia("(pointer: coarse)").matches) {
+    addEventListener("resize", resize);
+  }
 
   return () => {
     removeEventListener("resize", resize);

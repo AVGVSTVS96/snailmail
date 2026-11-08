@@ -243,8 +243,9 @@ const bases = {
 
 export type ThemeKey = keyof typeof bases;
 
-// SAFETY: Object.keys of a literal object returns exactly its keys
-export const themeKeys = Object.keys(bases) as readonly ThemeKey[];
+const isThemeKey = (key: string): key is ThemeKey => Object.hasOwn(bases, key);
+
+export const themeKeys: readonly ThemeKey[] = Object.keys(bases).filter(isThemeKey);
 
 export type Theme = Omit<Base, "style"> & {
   key: ThemeKey;
@@ -271,10 +272,12 @@ const luminance = (hex: string) => {
 };
 
 export const contrast = (a: string, b: string) => {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  const [x, y] = [luminance(a), luminance(b)];
 
-  return (hi + 0.05) / (lo + 0.05);
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 };
+
+const isInkKey = (key: string): key is InkKey => Object.hasOwn(inks, key);
 
 export const inkFits = (ink: InkKey, paper: PaperKey) =>
   contrast(inks[ink].color, papers[paper].color) >= 4.5;
@@ -286,8 +289,10 @@ export const resolveTheme = (key: ThemeKey, style: Partial<Style> = {}): Theme =
   const chosen: Style = { ...base.style, ...style };
 
   if (!inkFits(chosen.ink, chosen.paper)) {
-    // SAFETY: Object.keys of a literal object returns exactly its keys
-    const fitting = (Object.keys(inks) as InkKey[]).find((ink) => inkFits(ink, chosen.paper));
+    const fitting = Object.keys(inks)
+      .filter(isInkKey)
+      .find((ink) => inkFits(ink, chosen.paper));
+
     chosen.ink = fitting ?? chosen.ink;
   }
 

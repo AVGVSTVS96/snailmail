@@ -6,7 +6,7 @@ export const GET = async (request: NextRequest) => {
   const next = request.nextUrl.searchParams.get("next");
 
   const url = new URL(
-    await getSignInUrl({ returnTo: next?.startsWith("/letters") ? next : "/letters" }),
+    await getSignInUrl({ returnTo: next?.startsWith("/letters") === true ? next : "/letters" }),
   );
 
   url.searchParams.set("provider", "GoogleOAuth");

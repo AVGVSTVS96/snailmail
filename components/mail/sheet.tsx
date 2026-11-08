@@ -7,10 +7,10 @@ import { WaxSeal } from "./seal";
 import { Emboss, Sprig } from "./stationery";
 import { VoiceNote } from "./voice-note";
 
-export const paragraphs = (body: string) => body.split(/\n\s*\n/).filter((p) => p.trim() !== "");
+export const paragraphs = (body: string) => body.split(/\n\s*\n/u).filter((p) => p.trim() !== "");
 
 export const inline = (text: string): ReactNode[] =>
-  text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/).map((part, i) => {
+  text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/u).map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
       return <strong key={i}>{part.slice(2, -2)}</strong>;
     }

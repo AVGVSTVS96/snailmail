@@ -8,8 +8,7 @@ import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import type { Stage } from "@/components/mail/experience";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { seedFrom } from "@/lib/delivery";
-import { toDelivery } from "@/lib/delivery";
+import { seedFrom, toDelivery } from "@/lib/delivery";
 import { deskProps } from "@/lib/texture";
 import { defaultStyle, resolveTheme } from "@/lib/theme";
 import type { Style, ThemeKey } from "@/lib/theme";
@@ -46,8 +45,8 @@ const fromSaved = (saved: Saved): Draft => ({
   body: saved.body,
 });
 
-export const Composer = ({ id }: { id: Id<"letters"> }) => {
-  const saved = useQuery(api.writer.letter, { id });
+export const Composer = ({ id }: { id: string }) => {
+  const saved = useQuery(api.writer.byId, { id });
 
   if (saved === undefined) {
     return <div className="writer w-loading" />;
@@ -101,7 +100,7 @@ const Editor = ({ saved }: { saved: Saved }) => {
     } catch (error) {
       setProblem(
         error instanceof Error
-          ? error.message.replace(/^.*ConvexError: /, "")
+          ? error.message.replace(/^.*ConvexError: /u, "")
           : "That didn't save.",
       );
     }

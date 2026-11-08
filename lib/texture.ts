@@ -23,7 +23,7 @@ const depth = 5;
 const tornEdge = (edge: Edge, seed: number) => {
   let a = seed;
 
-  const next = () => {
+  const random = () => {
     a = (a * 16_807) % 2_147_483_647;
 
     return a / 2_147_483_647;
@@ -32,27 +32,27 @@ const tornEdge = (edge: Edge, seed: number) => {
   let wander = 1.8;
 
   const bites = Array.from({ length: tile / 2 }, () => {
-    wander = Math.min(2.8, Math.max(0.8, wander + (next() - 0.5) * 0.8));
+    wander = Math.min(2.8, Math.max(0.8, wander + (random() - 0.5) * 0.8));
 
-    return Math.min(3.6, Math.max(0.3, wander + (next() - 0.5) * 1.2));
+    return Math.min(3.6, Math.max(0.3, wander + (random() - 0.5) * 1.2));
   });
 
   bites.push(bites[0] ?? 1.8);
 
   const place = (along: number, bite: number) => {
-    const [x, y] =
-      edge === "top"
-        ? [along, bite]
-        : edge === "bottom"
-          ? [along, depth - bite]
-          : edge === "left"
-            ? [bite, along]
-            : [depth - bite, along];
+    const corners: Record<Edge, [number, number]> = {
+      top: [along, bite],
+      bottom: [along, depth - bite],
+      left: [bite, along],
+      right: [depth - bite, along],
+    };
+
+    const [x, y] = corners[edge];
 
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   };
 
-  const fibres = bites.map((bite) => Math.max(0, bite - 0.3 - next() * 0.8));
+  const fibres = bites.map((bite) => Math.max(0, bite - 0.3 - random() * 0.8));
   fibres[fibres.length - 1] = fibres[0] ?? 0;
   const line = (depths: number[]) => depths.map((bite, i) => place(i * 2, bite)).join(" L");
   const inner = place(0, depth);

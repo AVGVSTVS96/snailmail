@@ -15,6 +15,7 @@ const length = async (file: Blob) =>
     audio.onloadedmetadata = () => {
       resolve(Number.isFinite(audio.duration) ? audio.duration : 0);
     };
+
     audio.onerror = () => {
       resolve(0);
     };

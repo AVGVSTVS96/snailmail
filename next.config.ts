@@ -5,7 +5,7 @@ import { unindexed as value } from "./lib/crawlers";
 const unindexed = [{ key: "X-Robots-Tag", value }];
 
 const nextConfig: NextConfig = {
-  headers: async () => [
+  headers: () => [
     { source: "/l/:path*", headers: unindexed },
     { source: "/s/:path*", headers: unindexed },
     { source: "/letters/:path*", headers: unindexed },
@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
   },
   partialPrefetching: true,
   htmlLimitedBots:
-    /facebookexternalhit|Facebot|Twitterbot|TelegramBot|WhatsApp|Slackbot|Discordbot|LinkedInBot|SkypeUriPreview|redditbot|vkShare|Applebot|Googlebot|Google-|bingbot|DuckDuckBot|Embedly|Iframely|bot\b/i,
+    /facebookexternalhit|Facebot|Twitterbot|TelegramBot|WhatsApp|Slackbot|Discordbot|LinkedInBot|SkypeUriPreview|redditbot|vkShare|Applebot|Googlebot|Google-|bingbot|DuckDuckBot|Embedly|Iframely|bot\b/iu,
   turbopack: {
     rules: {
       "*.css": {

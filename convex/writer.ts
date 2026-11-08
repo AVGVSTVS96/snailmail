@@ -46,10 +46,10 @@ export const slugify = (text: string) =>
   text
     .normalize("NFKD")
     .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/^-+|-+$/g, "")
+    .replaceAll(/[^a-z0-9]+/gu, "-")
+    .replaceAll(/^-+|-+$/gu, "")
     .slice(0, 40)
-    .replaceAll(/-+$/g, "");
+    .replaceAll(/-+$/gu, "");
 
 const slugTaken = async (ctx: QueryCtx, slug: string, id: Id<"letters">) => {
   const holders = await ctx.db
@@ -100,9 +100,15 @@ export const letters = query({
   },
 });
 
-export const letter = query({
-  args: { id: v.id("letters") },
-  handler: async (ctx, { id }) => {
+export const byId = query({
+  args: { id: v.string() },
+  handler: async (ctx, args) => {
+    const id = ctx.db.normalizeId("letters", args.id);
+
+    if (id === null) {
+      throw new ConvexError("No such letter");
+    }
+
     const letter = await own(ctx, id);
 
     return {
@@ -175,7 +181,7 @@ const edits = {
 };
 
 const fits = (text: string | null | undefined, max: number) => {
-  if (text && text.length > max) {
+  if ((text?.length ?? 0) > max) {
     throw new ConvexError(`Keep it under ${max} characters.`);
   }
 };
@@ -237,7 +243,7 @@ const claimSlug = async (
   const slug = slugify(wanted);
 
   if (slug === "") {
-    return;
+    return null;
   }
 
   if (!(await slugTaken(ctx, slug, letter._id))) {
@@ -248,7 +254,7 @@ const claimSlug = async (
     throw new ConvexError(`${slug} is taken. Try another name.`);
   }
 
-  for (let n = 2; n < 100; n++) {
+  for (let n = 2; n < 100; n += 1) {
     const next = `${slug.slice(0, 36)}-${n}`;
 
     if (!(await slugTaken(ctx, next, letter._id))) {
@@ -283,7 +289,7 @@ export const publish = mutation({
 
     await ctx.db.patch(letter._id, {
       status: "published",
-      slug,
+      slug: slug ?? undefined,
       key,
       sealedAt: first ? now : letter.sealedAt,
       updatedAt: now,
@@ -336,8 +342,8 @@ export const setVoice = mutation({
       const meta = await ctx.db.system.get(file);
 
       if (
-        !meta ||
-        !meta.contentType?.startsWith("audio/") ||
+        meta === null ||
+        meta.contentType?.startsWith("audio/") !== true ||
         meta.size > 12_000_000 ||
         seconds > 181
       ) {

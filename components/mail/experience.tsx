@@ -49,6 +49,7 @@ const activate = (action: () => void) => (event: React.KeyboardEvent) => {
   if (event.key !== "Enter" && event.key !== " ") {
     return;
   }
+
   event.preventDefault();
   action();
 };

@@ -7,13 +7,16 @@ const headers = { "Cache-Control": "private, no-store" };
 
 const signedIn = async (request: NextRequest) => {
   if (!request.cookies.has("wos-session")) {
-    return;
+    return null;
   }
 
-  return await authkit(request).then(
-    ({ session }) => session.user?.id,
-    () => {},
-  );
+  try {
+    const { session } = await authkit(request);
+
+    return session.user?.id ?? null;
+  } catch {
+    return null;
+  }
 };
 
 export const POST = async (request: NextRequest, { params }: RouteContext<"/l/[token]/letter">) => {

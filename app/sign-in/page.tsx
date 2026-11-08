@@ -60,6 +60,7 @@ const SignIn = () => (
         </p>
         <Suspense
           fallback={
+            // oxlint-disable-next-line next/no-html-link-for-pages -- /auth/google is a route handler that redirects to Google, not a page
             <a className="w-google" href="/auth/google">
               {google()}
               Continue with Google

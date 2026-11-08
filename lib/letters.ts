@@ -9,7 +9,7 @@ import { serverSecret } from "@/convex/secret";
 
 import { scraperAgent } from "./crawlers";
 
-const linkToken = /^[\w-]{22}$/;
+const linkToken = /^[\w-]{22}$/u;
 
 const network = (ip: string) => {
   if (!ip.includes(":")) {
@@ -63,14 +63,18 @@ export const getLetter = cache(async (token: string) => {
   return letter === "limited" ? null : letter;
 });
 
-export const readLetter = async (token: string, reader: string | undefined) => {
+export const readLetter = async (token: string, reader: string | null) => {
   const args = await door(token);
 
-  return args ? await fetchMutation(api.letters.read, { ...args, reader }) : null;
+  if (args === null) {
+    return null;
+  }
+
+  return await fetchMutation(api.letters.read, reader === null ? args : { ...args, reader });
 };
 
-const slugName = /^[a-z0-9-]{1,40}$/;
-const linkKey = /^[a-z0-9]{0,8}$/;
+const slugName = /^[a-z0-9-]{1,40}$/u;
+const linkKey = /^[a-z0-9]{0,8}$/u;
 
 export const getLetterAt = cache(async (slug: string, key: string) => {
   const guest = slugName.test(slug) && linkKey.test(key) ? await visitor() : null;

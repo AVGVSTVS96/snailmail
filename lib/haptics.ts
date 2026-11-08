@@ -1,11 +1,8 @@
-export const tap = (milliseconds: number) => {
-  if ("vibrate" in navigator) {
-    navigator.vibrate(milliseconds);
+const vibrate = (milliseconds: number) => {
+  navigator.vibrate(milliseconds);
+};
 
-    return;
-  }
-
-  // iOS Safari has no Vibration API, but toggling a switch input plays the system haptic (iOS 18+).
+const toggleIosSwitch = () => {
   const label = document.createElement("label");
   const input = document.createElement("input");
 
@@ -16,4 +13,14 @@ export const tap = (milliseconds: number) => {
   document.body.append(label);
   label.click();
   label.remove();
+};
+
+export const tap = (milliseconds: number) => {
+  if ("vibrate" in navigator) {
+    vibrate(milliseconds);
+
+    return;
+  }
+
+  toggleIosSwitch();
 };
