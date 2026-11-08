@@ -6,20 +6,24 @@ import { useRef, useState } from "react";
 import { duration } from "@/components/mail/voice-note";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { Uploaded } from "@/lib/upload";
 
 const maxSeconds = 180;
 
-const length = async (file: Blob) =>
-  await new Promise<number>((resolve) => {
-    const audio = new Audio(URL.createObjectURL(file));
-    audio.onloadedmetadata = () => {
-      resolve(Number.isFinite(audio.duration) ? audio.duration : 0);
-    };
+const audioSeconds = async (file: Blob) => {
+  const { promise, resolve } = Promise.withResolvers<number>();
+  const audio = new Audio(URL.createObjectURL(file));
 
-    audio.onerror = () => {
-      resolve(0);
-    };
+  audio.addEventListener("loadedmetadata", () => {
+    resolve(Number.isFinite(audio.duration) ? audio.duration : 0);
   });
+
+  audio.addEventListener("error", () => {
+    resolve(0);
+  });
+
+  return await promise;
+};
 
 export const VoiceRecorder = ({
   id,
@@ -48,7 +52,7 @@ export const VoiceRecorder = ({
         body: file,
       });
 
-      const { storageId } = await response.json();
+      const { storageId } = Uploaded.parse(await response.json());
       await setVoice({ id, file: storageId, seconds: length });
       setProblem("");
     } catch {
@@ -56,6 +60,18 @@ export const VoiceRecorder = ({
     }
 
     setState("idle");
+  };
+
+  const upload = async (file: File) => {
+    const fileSeconds = await audioSeconds(file);
+
+    if (fileSeconds > maxSeconds + 1) {
+      setProblem("Voice notes can be up to 3 minutes.");
+
+      return;
+    }
+
+    await store(file, fileSeconds);
   };
 
   const record = async () => {
@@ -66,25 +82,27 @@ export const VoiceRecorder = ({
         MediaRecorder.isTypeSupported(t),
       );
 
-      const media = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+      const media = new MediaRecorder(stream, type === undefined ? undefined : { mimeType: type });
       const chunks: Blob[] = [];
       const started = performance.now();
-      media.ondataavailable = (event) => chunks.push(event.data);
+      media.addEventListener("dataavailable", (event) => {
+        chunks.push(event.data);
+      });
 
-      media.onstop = () => {
-        stream.getTracks().forEach((track) => {
+      media.addEventListener("stop", () => {
+        for (const track of stream.getTracks()) {
           track.stop();
-        });
+        }
 
-        if (timer.current) {
+        if (timer.current !== null) {
           clearInterval(timer.current);
         }
 
         void store(
-          new Blob(chunks, { type: media.mimeType.split(";")[0] }),
+          new Blob(chunks, { type: media.mimeType.split(";")[0] ?? "" }),
           (performance.now() - started) / 1000,
         );
-      };
+      });
 
       recorder.current = media;
       media.start();
@@ -112,7 +130,13 @@ export const VoiceRecorder = ({
           <div className="w-strong">Recording · {duration(seconds)}</div>
           <div className="w-soft">Up to 3 minutes</div>
         </div>
-        <button type="button" className="w-button w-small" onClick={() => recorder.current?.stop()}>
+        <button
+          type="button"
+          className="w-button w-small"
+          onClick={() => {
+            recorder.current?.stop();
+          }}
+        >
           Stop
         </button>
       </div>
@@ -130,7 +154,9 @@ export const VoiceRecorder = ({
         <button
           type="button"
           className="w-text-button"
-          onClick={() => void setVoice({ id, file: null, seconds: 0 })}
+          onClick={() => {
+            void setVoice({ id, file: null, seconds: 0 });
+          }}
         >
           Remove
         </button>
@@ -138,20 +164,23 @@ export const VoiceRecorder = ({
     );
   }
 
+  const recordLabel = state === "saving" ? "Saving…" : "Record a voice note";
+
   return (
     <div>
       <div className="w-extra">
         <button
           type="button"
           className="w-extra-main"
-          onClick={record}
+          aria-label={recordLabel}
+          onClick={() => {
+            void record();
+          }}
           disabled={state === "saving"}
         >
           <span className="w-rec-dot" />
           <span>
-            <span className="w-strong">
-              {state === "saving" ? "Saving…" : "Record a voice note"}
-            </span>
+            <span className="w-strong">{recordLabel}</span>
             <span className="w-soft">Up to 3 minutes, plays from the letter</span>
           </span>
         </button>
@@ -161,27 +190,17 @@ export const VoiceRecorder = ({
             type="file"
             accept="audio/*"
             hidden
-            onChange={async (event) => {
+            onChange={(event) => {
               const file = event.target.files?.[0];
 
-              if (!file) {
-                return;
+              if (file !== undefined) {
+                void upload(file);
               }
-
-              const seconds = await length(file);
-
-              if (seconds > maxSeconds + 1) {
-                setProblem("Voice notes can be up to 3 minutes.");
-
-                return;
-              }
-
-              await store(file, seconds);
             }}
           />
         </label>
       </div>
-      {problem && <p className="w-problem">{problem}</p>}
+      {problem !== "" && <p className="w-problem">{problem}</p>}
     </div>
   );
 };

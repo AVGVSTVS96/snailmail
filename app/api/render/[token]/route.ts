@@ -1,13 +1,11 @@
 import { fetchMutation } from "convex/nextjs";
-import { z } from "zod/mini";
 
 import { api } from "@/convex/_generated/api";
 import { film } from "@/lib/film";
 import { present } from "@/lib/site";
+import { Uploaded } from "@/lib/upload";
 
 export const maxDuration = 300;
-
-const Uploaded = z.object({ storageId: z.string() });
 
 const upload = async (secret: string, bytes: Buffer, type: string) => {
   const url = await fetchMutation(api.render.uploadUrl, { secret });

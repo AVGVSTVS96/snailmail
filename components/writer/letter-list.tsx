@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { api } from "@/convex/_generated/api";
-import { seedFrom } from "@/lib/delivery";
+import { initialOf, seedFrom } from "@/lib/delivery";
 import { letterLink } from "@/lib/links";
 import { resolveTheme } from "@/lib/theme";
 
@@ -23,7 +23,7 @@ const opened = (opens: number, at: number | null) => {
 
   return {
     main: opens === 1 ? "Opened once" : `Opened ${opens} times`,
-    sub: at ? `last ${ago(at)}` : "",
+    sub: at === null ? "" : `last ${ago(at)}`,
   };
 };
 
@@ -74,7 +74,9 @@ export const LetterList = () => {
           <button
             type="button"
             className="w-button w-primary"
-            onClick={newLetter}
+            onClick={() => {
+              void newLetter();
+            }}
             disabled={making}
           >
             <svg viewBox="0 0 16 16" aria-hidden>
@@ -106,7 +108,7 @@ export const LetterList = () => {
                 const published = letter.status === "published";
                 const link = letterLink(letter, hosts);
                 const seen = opened(letter.opens, letter.openedAt);
-                const initial = (letter.initial || letter.from.slice(0, 1) || "S").toUpperCase();
+                const initial = initialOf(letter);
 
                 return (
                   <tr

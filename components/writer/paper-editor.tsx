@@ -1,18 +1,24 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 import { paragraphs } from "@/components/mail/sheet";
+import { useImperative, useOnMount } from "@/lib/outside";
 
 const escape = (text: string) =>
   text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+
+const command = (name: string, value?: string) => {
+  // oxlint-disable-next-line typescript/no-deprecated -- execCommand is still the only way to edit rich text in a contentEditable element
+  document.execCommand(name, false, value);
+};
 
 const toHtml = (body: string) => {
   const blocks = paragraphs(body).map(
     (p) =>
       `<p>${escape(p)
-        .replaceAll(/\*\*([^*]+)\*\*/gu, "<b>$1</b>")
-        .replaceAll(/\*([^*]+)\*/gu, "<i>$1</i>")
+        .replaceAll(/\*\*(?<bold>[^*]+)\*\*/gu, "<b>$<bold></b>")
+        .replaceAll(/\*(?<italic>[^*]+)\*/gu, "<i>$<italic></i>")
         .replaceAll("\n", "<br>")}</p>`,
   );
 
@@ -60,7 +66,7 @@ const toBody = (root: HTMLElement) => {
   const blocks: string[] = [];
   let loose = "";
 
-  for (const node of [...root.childNodes]) {
+  for (const node of root.childNodes) {
     const block = node instanceof HTMLElement && (node.tagName === "P" || node.tagName === "DIV");
 
     if (block) {
@@ -100,7 +106,7 @@ export const PaperEditor = ({
   const editor = useRef<HTMLDivElement>(null);
   const last = useRef(body);
 
-  useEffect(() => {
+  useImperative(() => {
     const element = editor.current;
 
     if (!element || body === last.current) {
@@ -111,14 +117,14 @@ export const PaperEditor = ({
     element.innerHTML = toHtml(body);
   }, [body]);
 
-  useEffect(() => {
+  useOnMount(() => {
     if (editor.current) {
       editor.current.innerHTML = toHtml(last.current);
     }
 
-    document.execCommand("styleWithCSS", false, "false");
-    document.execCommand("defaultParagraphSeparator", false, "p");
-  }, []);
+    command("styleWithCSS", "false");
+    command("defaultParagraphSeparator", "p");
+  });
 
   const changed = () => {
     if (!editor.current) {
@@ -135,6 +141,8 @@ export const PaperEditor = ({
       className="w-paper-text"
       contentEditable
       suppressContentEditableWarning
+      tabIndex={0}
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- the letter is rich text, which only a contentEditable element can edit
       role="textbox"
       aria-multiline
       aria-label="Your letter"
@@ -156,7 +164,7 @@ export const PaperEditor = ({
         }
 
         event.preventDefault();
-        document.execCommand(key === "b" ? "bold" : "italic");
+        command(key === "b" ? "bold" : "italic");
         changed();
       }}
       onPaste={(event) => {
@@ -167,7 +175,7 @@ export const PaperEditor = ({
           .map((p) => `<p>${escape(p).replaceAll("\n", "<br>")}</p>`)
           .join("");
 
-        document.execCommand("insertHTML", false, html || escape(text));
+        command("insertHTML", html || escape(text));
         changed();
       }}
     />

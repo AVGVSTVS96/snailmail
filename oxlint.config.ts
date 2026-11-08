@@ -52,6 +52,7 @@ export default defineConfig({
   ],
   rules: {
     "eslint/no-await-in-loop": "off",
+    "eslint/no-redeclare": "off",
     "eslint/sort-keys": "off",
     "import/no-cycle": "error",
     "no-comments/no-comments": "error",

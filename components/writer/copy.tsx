@@ -15,6 +15,14 @@ export const CopyButton = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
+  const copy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 1400);
+  };
+
   return (
     <button
       type="button"
@@ -24,12 +32,7 @@ export const CopyButton = ({
       title={copied ? "Copied" : label}
       onClick={(event) => {
         event.stopPropagation();
-        void navigator.clipboard.writeText(text).then(() => {
-          setCopied(true);
-          setTimeout(() => {
-            setCopied(false);
-          }, 1400);
-        });
+        void copy();
       }}
     >
       {copied ? (

@@ -5,27 +5,31 @@ import { useRef } from "react";
 type Point = readonly [number, number];
 
 const smooth = (points: readonly Point[]) => {
-  if (points.length === 0) {
+  const [first, ...rest] = points;
+
+  if (first === undefined) {
     return "";
   }
 
-  const [first, ...rest] = points;
+  const last = rest.at(-1);
 
-  if (rest.length === 0) {
+  if (last === undefined) {
     return `M${first[0]},${first[1]} l0.1,0`;
   }
 
   let d = `M${first[0].toFixed(1)},${first[1].toFixed(1)}`;
+  let control: Point | null = null;
 
-  for (let i = 0; i < rest.length - 1; i++) {
-    const [x, y] = rest[i];
-    const [nx, ny] = rest[i + 1];
-    d += ` Q${x.toFixed(1)},${y.toFixed(1)} ${((x + nx) / 2).toFixed(1)},${((y + ny) / 2).toFixed(1)}`;
+  for (const [nx, ny] of rest) {
+    if (control !== null) {
+      const [x, y] = control;
+      d += ` Q${x.toFixed(1)},${y.toFixed(1)} ${((x + nx) / 2).toFixed(1)},${((y + ny) / 2).toFixed(1)}`;
+    }
+
+    control = [nx, ny];
   }
 
-  const [lx, ly] = rest.at(-1);
-
-  return `${d} L${lx.toFixed(1)},${ly.toFixed(1)}`;
+  return `${d} L${last[0].toFixed(1)},${last[1].toFixed(1)}`;
 };
 
 export const SignaturePad = ({
@@ -38,7 +42,7 @@ export const SignaturePad = ({
   onChange: (path: string | null) => void;
 }) => {
   const svg = useRef<SVGSVGElement>(null);
-  const strokes = useRef<string[]>(value ? [value] : []);
+  const strokes = useRef<string[]>(value === null || value === "" ? [] : [value]);
   const current = useRef<Point[]>([]);
   const live = useRef<SVGPathElement>(null);
 
@@ -87,6 +91,7 @@ export const SignaturePad = ({
           onChange(strokes.current.join(" "));
         }}
         aria-label="Draw your signature"
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- the pad is a live SVG drawing surface, which an <img> can't be
         role="img"
       >
         <line x1="20" y1="96" x2="280" y2="96" className="w-sign-line" />

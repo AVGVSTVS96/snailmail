@@ -334,9 +334,14 @@ export const voiceUploadUrl = mutation({
 });
 
 export const setVoice = mutation({
-  args: { id: v.id("letters"), file: v.union(v.id("_storage"), v.null()), seconds: v.number() },
-  handler: async (ctx, { id, file, seconds }) => {
+  args: { id: v.id("letters"), file: v.union(v.string(), v.null()), seconds: v.number() },
+  handler: async (ctx, { id, seconds, ...args }) => {
     const letter = await own(ctx, id);
+    const file = args.file === null ? null : ctx.db.system.normalizeId("_storage", args.file);
+
+    if (args.file !== null && file === null) {
+      throw new ConvexError("That file didn't upload.");
+    }
 
     if (file !== null) {
       const meta = await ctx.db.system.get(file);

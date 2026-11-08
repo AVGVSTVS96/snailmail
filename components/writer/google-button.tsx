@@ -6,9 +6,10 @@ import type { ReactNode } from "react";
 export const GoogleButton = ({ children }: { children: ReactNode }) => {
   const next = useSearchParams().get("next");
 
-  const href = next?.startsWith("/letters")
-    ? `/auth/google?next=${encodeURIComponent(next)}`
-    : "/auth/google";
+  const href =
+    next?.startsWith("/letters") === true
+      ? `/auth/google?next=${encodeURIComponent(next)}`
+      : "/auth/google";
 
   return (
     <a className="w-google" href={href}>

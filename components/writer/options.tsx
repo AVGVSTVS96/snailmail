@@ -6,6 +6,7 @@ import { Liner } from "@/components/mail/envelope";
 import { Emblem, WaxSeal } from "@/components/mail/seal";
 import { SealedEnvelope } from "@/components/mail/sealed";
 import { Stamp } from "@/components/mail/stationery";
+import { initialOf } from "@/lib/delivery";
 import {
   emblems,
   finishes,
@@ -44,9 +45,43 @@ interface Props {
   onField: (field: Partial<Omit<Fields, "theme" | "style">>) => void;
 }
 
-const keysOf = <T extends object>(catalog: T) =>
-  // SAFETY: Object.keys of a literal catalog returns exactly its keys
-  Object.keys(catalog) as (keyof T)[];
+const keysOf = <K extends string, V>(catalog: Record<K, V>) =>
+  Object.keys(catalog).filter((key): key is K => Object.hasOwn(catalog, key));
+
+const Choice = ({
+  on,
+  onPick,
+  kind = "",
+  label,
+  title = label,
+  disabled = false,
+  style,
+  children,
+}: {
+  on: boolean;
+  onPick: () => void;
+  kind?: string;
+  label?: string;
+  title?: string | undefined;
+  disabled?: boolean;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
+}) => (
+  <button
+    type="button"
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- each choice is drawn artwork inside a radiogroup, which a native radio input can't hold
+    role="radio"
+    aria-checked={on}
+    aria-label={label}
+    title={title}
+    disabled={disabled}
+    className={`${kind} ${on ? "w-on" : ""}`.trim()}
+    style={style}
+    onClick={onPick}
+  >
+    {children}
+  </button>
+);
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="w-section">
@@ -99,25 +134,51 @@ const Segments = <K extends string>({
 }) => (
   <div className="w-segments" role="radiogroup" aria-label={label}>
     {keysOf(options).map((key) => (
-      <button
+      <Choice
         key={key}
-        type="button"
-        role="radio"
-        aria-checked={key === value}
-        className={key === value ? "w-on" : ""}
-        onClick={() => {
+        on={key === value}
+        onPick={() => {
           onChange(key);
         }}
       >
         {options[key]}
-      </button>
+      </Choice>
     ))}
   </div>
 );
 
+const LinerSwatch = ({
+  theme,
+  label,
+  on,
+  onPick,
+}: {
+  theme: Theme;
+  label: string;
+  on: boolean;
+  onPick: () => void;
+}) => {
+  const id = useId();
+
+  return (
+    <Choice kind="w-liner" on={on} label={label} onPick={onPick}>
+      <svg viewBox="0 0 46 46">
+        <defs>
+          <Liner id={id} theme={theme} />
+        </defs>
+        <rect
+          width="46"
+          height="46"
+          fill={theme.style.liner === "none" ? "#F4F2EE" : `url(#${id})`}
+        />
+      </svg>
+    </Choice>
+  );
+};
+
 export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props) => {
   const { style } = look;
-  const initial = (fields.initial || fields.from.slice(0, 1) || "S").toUpperCase();
+  const initial = initialOf(fields);
 
   return (
     <div className="w-options">
@@ -127,13 +188,11 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
             const theme = resolveTheme(key);
 
             return (
-              <button
+              <Choice
                 key={key}
-                type="button"
-                role="radio"
-                aria-checked={fields.theme === key}
-                className={`w-theme ${fields.theme === key ? "w-on" : ""}`}
-                onClick={() => {
+                kind="w-theme"
+                on={fields.theme === key}
+                onPick={() => {
                   onTheme(key);
                 }}
               >
@@ -141,7 +200,7 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
                   <SealedEnvelope theme={theme} from={null} initial={initial} seed={seed} />
                 </span>
                 <span>{theme.name}</span>
-              </button>
+              </Choice>
             );
           })}
         </div>
@@ -198,16 +257,13 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
       <Section title="Paper">
         <div className="w-swatches" role="radiogroup" aria-label="Paper colour">
           {keysOf(papers).map((key) => (
-            <button
+            <Choice
               key={key}
-              type="button"
-              role="radio"
-              aria-checked={style.paper === key}
-              aria-label={papers[key].name}
-              title={papers[key].name}
-              className={`w-swatch ${style.paper === key ? "w-on" : ""}`}
+              kind="w-swatch"
+              on={style.paper === key}
+              label={papers[key].name}
               style={{ background: papers[key].color }}
-              onClick={() => {
+              onPick={() => {
                 onStyle({ paper: key });
               }}
             />
@@ -229,17 +285,15 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
             const fits = inkFits(key, style.paper);
 
             return (
-              <button
+              <Choice
                 key={key}
-                type="button"
-                role="radio"
-                aria-checked={style.ink === key}
-                aria-label={inks[key].name}
+                kind="w-swatch"
+                on={style.ink === key}
+                label={inks[key].name}
                 title={fits ? inks[key].name : `${inks[key].name} is too faint on this paper`}
                 disabled={!fits}
-                className={`w-swatch ${style.ink === key ? "w-on" : ""}`}
                 style={{ background: inks[key].color }}
-                onClick={() => {
+                onPick={() => {
                   onStyle({ ink: key });
                 }}
               />
@@ -251,13 +305,11 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
       <Section title="Typeface">
         <div className="w-faces" role="radiogroup" aria-label="Typeface">
           {keysOf(typefaces).map((key) => (
-            <button
+            <Choice
               key={key}
-              type="button"
-              role="radio"
-              aria-checked={style.typeface === key}
-              className={`w-face ${style.typeface === key ? "w-on" : ""}`}
-              onClick={() => {
+              kind="w-face"
+              on={style.typeface === key}
+              onPick={() => {
                 onStyle({ typeface: key });
               }}
             >
@@ -266,7 +318,7 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
               </span>
               <span className="w-face-name">{typefaces[key].name}</span>
               <span className="w-face-family">{typefaces[key].family}</span>
-            </button>
+            </Choice>
           ))}
         </div>
       </Section>
@@ -305,15 +357,12 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
       <Section title="Wax seal">
         <div className="w-seals" role="radiogroup" aria-label="Wax colour">
           {keysOf(waxes).map((key) => (
-            <button
+            <Choice
               key={key}
-              type="button"
-              role="radio"
-              aria-checked={style.wax === key}
-              aria-label={waxes[key].name}
-              title={waxes[key].name}
-              className={`w-seal ${style.wax === key ? "w-on" : ""}`}
-              onClick={() => {
+              kind="w-seal"
+              on={style.wax === key}
+              label={waxes[key].name}
+              onPick={() => {
                 onStyle({ wax: key });
               }}
             >
@@ -322,20 +371,17 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
                 initial={initial}
                 seed={seed}
               />
-            </button>
+            </Choice>
           ))}
         </div>
         <div className="w-emblems" role="radiogroup" aria-label="Seal emblem">
           {keysOf(emblems).map((key) => (
-            <button
+            <Choice
               key={key}
-              type="button"
-              role="radio"
-              aria-checked={style.emblem === key}
-              aria-label={emblems[key]}
-              title={emblems[key]}
-              className={`w-emblem ${style.emblem === key ? "w-on" : ""}`}
-              onClick={() => {
+              kind="w-emblem"
+              on={style.emblem === key}
+              label={emblems[key]}
+              onPick={() => {
                 onStyle({ emblem: key });
               }}
             >
@@ -346,7 +392,7 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
                   <Emblem kind={key} />
                 </svg>
               )}
-            </button>
+            </Choice>
           ))}
         </div>
         {style.emblem === "initial" && (
@@ -365,15 +411,13 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
       <Section title="Stamp">
         <div className="w-stamps" role="radiogroup" aria-label="Stamp">
           {keysOf(stamps).map((key) => (
-            <button
+            <Choice
               key={key}
-              type="button"
-              role="radio"
-              aria-checked={style.stamp === key}
-              aria-label={`${stamps[key].name}, ${stamps[key].caption}`}
+              kind="w-stamp"
+              on={style.stamp === key}
+              label={`${stamps[key].name}, ${stamps[key].caption}`}
               title={`${stamps[key].name} · ${stamps[key].caption}`}
-              className={`w-stamp ${style.stamp === key ? "w-on" : ""}`}
-              onClick={() => {
+              onPick={() => {
                 onStyle({ stamp: key });
               }}
             >
@@ -385,7 +429,7 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
                   }}
                 />
               </svg>
-            </button>
+            </Choice>
           ))}
         </div>
       </Section>
@@ -406,42 +450,5 @@ export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props
         </div>
       </Section>
     </div>
-  );
-};
-
-const LinerSwatch = ({
-  theme,
-  label,
-  on,
-  onPick,
-}: {
-  theme: Theme;
-  label: string;
-  on: boolean;
-  onPick: () => void;
-}) => {
-  const id = useId();
-
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={on}
-      aria-label={label}
-      title={label}
-      className={`w-liner ${on ? "w-on" : ""}`}
-      onClick={onPick}
-    >
-      <svg viewBox="0 0 46 46">
-        <defs>
-          <Liner id={id} theme={theme} />
-        </defs>
-        <rect
-          width="46"
-          height="46"
-          fill={theme.style.liner === "none" ? "#F4F2EE" : `url(#${id})`}
-        />
-      </svg>
-    </button>
   );
 };

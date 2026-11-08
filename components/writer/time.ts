@@ -1,3 +1,6 @@
+export const day = (at: number) =>
+  new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(at);
+
 export const ago = (at: number, now = Date.now()) => {
   const minutes = Math.round((now - at) / 60_000);
 
@@ -17,6 +20,3 @@ export const ago = (at: number, now = Date.now()) => {
 
   return day(at);
 };
-
-export const day = (at: number) =>
-  new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(at);

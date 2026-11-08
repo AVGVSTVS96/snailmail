@@ -45,6 +45,9 @@ export const seedFrom = (text: string) => {
   return h >>> 0;
 };
 
+export const initialOf = ({ initial, from }: { initial: string | null; from: string }) =>
+  ([initial ?? "", from.trim().slice(0, 1)].find((first) => first !== "") ?? "S").toUpperCase();
+
 export interface LetterFields {
   token: string;
   theme: ThemeKey;
@@ -91,9 +94,7 @@ export const toDelivery = (letter: LetterFields, words?: Words): Delivery => {
     letter: { from: letter.from, date: `${day} ${month} ${year}` },
     words,
     seed: seedFrom(letter.token),
-    initial: (
-      [letter.initial ?? "", letter.from.trim().slice(0, 1)].find((first) => first !== "") ?? "S"
-    ).toUpperCase(),
+    initial: initialOf(letter),
     arrived: `A LETTER ARRIVED · ${day} ${short}`,
     signedFrom:
       city === "" ? `from ${letter.from}` : `from ${letter.from}, sealed in ${letter.city}`,

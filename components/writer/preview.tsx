@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Experience } from "@/components/mail/experience";
 import type { Stage } from "@/components/mail/experience";
 import type { Delivery } from "@/lib/delivery";
+import { useListener, useTimeout } from "@/lib/outside";
 
 export interface PreviewMessage {
   kind: "snailmail-preview";
@@ -17,37 +18,30 @@ export interface PreviewMessage {
 export const Preview = () => {
   const [message, setMessage] = useState<PreviewMessage | null>(null);
 
-  useEffect(() => {
-    const receive = (event: MessageEvent<PreviewMessage>) => {
-      if (event.origin !== location.origin || event.data?.kind !== "snailmail-preview") {
-        return;
+  useListener(
+    (receive: (event: MessageEvent<PreviewMessage>) => void) => {
+      addEventListener("message", receive);
+      parent.postMessage({ kind: "snailmail-preview-ready" }, location.origin);
+
+      return () => {
+        removeEventListener("message", receive);
+      };
+    },
+    (event) => {
+      if (event.origin === location.origin && event.data?.kind === "snailmail-preview") {
+        setMessage(event.data);
       }
+    },
+    [],
+  );
 
-      setMessage(event.data);
-    };
-
-    addEventListener("message", receive);
-    parent.postMessage({ kind: "snailmail-preview-ready" }, location.origin);
-
-    return () => {
-      removeEventListener("message", receive);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!message?.end) {
-      return;
-    }
-
-    const timer = setTimeout(
-      () => document.querySelector(".keep")?.scrollIntoView({ block: "center" }),
-      120,
-    );
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [message]);
+  useTimeout(
+    () => {
+      document.querySelector(".keep")?.scrollIntoView({ block: "center" });
+    },
+    message?.end === true ? 120 : null,
+    [message],
+  );
 
   if (!message) {
     return null;

@@ -21,7 +21,10 @@ export const Nav = () => {
         <span className="w-nav-email">{user?.email}</span>
         <details className="w-avatar-menu">
           <summary className="w-avatar" aria-label="Account">
-            {user?.profilePictureUrl ? (
+            {user?.profilePictureUrl !== undefined &&
+            user.profilePictureUrl !== null &&
+            user.profilePictureUrl !== "" ? (
+              // oxlint-disable-next-line next/no-img-element -- a small avatar straight from Google, which needs no-referrer rather than next/image's proxy
               <img src={user.profilePictureUrl} alt="" referrerPolicy="no-referrer" />
             ) : (
               letter

@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { z } from "zod/mini";
 
 import type { Stage } from "@/components/mail/experience";
 import type { Delivery } from "@/lib/delivery";
+import { useImperative, useResize, useWindowEvent } from "@/lib/outside";
 
 import type { PreviewMessage } from "./preview";
+
+const PreviewReady = z.object({ kind: z.literal("snailmail-preview-ready") });
+
+const sandbox = "allow-scripts allow-same-origin allow-popups allow-modals";
 
 const sizes = { phone: [390, 844], desktop: [1280, 800] } as const;
 
@@ -23,39 +29,17 @@ export const PreviewFrame = ({ delivery, stage, end, run, device }: Props) => {
   const [ready, setReady] = useState(false);
   const [width, setWidth] = useState(332);
 
-  useEffect(() => {
-    const hello = (event: MessageEvent<{ kind?: string }>) => {
-      if (event.origin === location.origin && event.data?.kind === "snailmail-preview-ready") {
-        setReady(true);
-      }
-    };
-
-    addEventListener("message", hello);
-
-    return () => {
-      removeEventListener("message", hello);
-    };
-  }, []);
-
-  useEffect(() => {
-    const element = box.current;
-
-    if (!element) {
-      return;
+  useWindowEvent("message", (event: MessageEvent<unknown>) => {
+    if (event.origin === location.origin && PreviewReady.safeParse(event.data).success) {
+      setReady(true);
     }
+  });
 
-    const observer = new ResizeObserver(([entry]) => {
-      setWidth(entry.contentRect.width);
-    });
+  useResize(box, (entry) => {
+    setWidth(entry.contentRect.width);
+  });
 
-    observer.observe(element);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
+  useImperative(() => {
     if (!ready) {
       return;
     }
@@ -65,7 +49,15 @@ export const PreviewFrame = ({ delivery, stage, end, run, device }: Props) => {
   }, [ready, delivery, stage, end, run]);
 
   if (device === "fill") {
-    return <iframe ref={frame} src="/preview" title="Letter preview" className="w-frame-fill" />;
+    return (
+      <iframe
+        ref={frame}
+        src="/preview"
+        title="Letter preview"
+        className="w-frame-fill"
+        sandbox={sandbox}
+      />
+    );
   }
 
   const [w, h] = sizes[device];
@@ -77,6 +69,7 @@ export const PreviewFrame = ({ delivery, stage, end, run, device }: Props) => {
         ref={frame}
         src="/preview"
         title="Letter preview"
+        sandbox={sandbox}
         width={w}
         height={h}
         style={{ transform: `scale(${scale})` }}
