@@ -42,7 +42,7 @@ bun run preview <token> --base http://localhost:3000   # renders its link previe
 
 Paragraphs in `body` are separated by blank lines. After testing a letter's link yourself while signed out, `bunx convex run letters:resetOpens '{"token":"<token>"}'` sets its open count back to zero, so its first real open still sends the email.
 
-`bun run check` runs oxlint (with [anti-slop](https://github.com/dmmulroy/anti-slop)'s rules, vendored in `tools/oxlint/anti-slop`), oxfmt and TypeScript.
+`bun run check` runs oxlint ([Ultracite](https://www.ultracite.ai)'s core rules and [anti-slop](https://github.com/dmmulroy/anti-slop)'s, type-aware), oxfmt, TypeScript and `bun test`; `bun run fix` applies the fixes.
 
 ## Deploy
 

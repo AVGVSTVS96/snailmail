@@ -1,19 +1,20 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import type { Stage } from "@/components/mail/experience";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { seedFrom, toDelivery } from "@/lib/delivery";
+import { useListener, useSubscription } from "@/lib/outside";
 import { deskProps } from "@/lib/texture";
 import { defaultStyle, resolveTheme } from "@/lib/theme";
 import type { Style, ThemeKey } from "@/lib/theme";
 
-import { Options } from "./options";
+import { Choice, Options } from "./options";
 import type { Fields } from "./options";
 import { PaperEditor, words } from "./paper-editor";
 import { PreviewFrame } from "./preview-frame";
@@ -21,16 +22,24 @@ import { PublishDialog } from "./publish-dialog";
 import { ago } from "./time";
 import { VoiceRecorder } from "./voice-recorder";
 
-type Saved = NonNullable<ReturnType<typeof useQuery<typeof api.writer.letter>>>;
+type Saved = FunctionReturnType<typeof api.writer.byId>;
 
 type Draft = Fields & { body: string };
 
-const steps: readonly { name: string; stage: Stage; end: boolean }[] = [
+const steps = [
   { name: "Envelope", stage: "front", end: false },
   { name: "Seal", stage: "back", end: false },
   { name: "Letter", stage: "read", end: false },
   { name: "End", stage: "read", end: true },
-];
+] as const satisfies readonly { name: string; stage: Stage; end: boolean }[];
+
+const stateLine = (saving: boolean, published: boolean, savedAt: number) => {
+  if (saving) {
+    return "Saving…";
+  }
+
+  return published ? "Published · changes go live as you type" : `Draft · saved ${ago(savedAt)}`;
+};
 
 const fromSaved = (saved: Saved): Draft => ({
   theme: saved.theme,
@@ -44,16 +53,6 @@ const fromSaved = (saved: Saved): Draft => ({
   signature: saved.signature,
   body: saved.body,
 });
-
-export const Composer = ({ id }: { id: string }) => {
-  const saved = useQuery(api.writer.byId, { id });
-
-  if (saved === undefined) {
-    return <div className="writer w-loading" />;
-  }
-
-  return <Editor key={id} saved={saved} />;
-};
 
 const Editor = ({ saved }: { saved: Saved }) => {
   const save = useMutation(api.writer.save);
@@ -90,11 +89,13 @@ const Editor = ({ saved }: { saved: Saved }) => {
     setSaving(true);
 
     try {
-      await save({
-        id: saved.id,
-        ...patch,
-        signature: patch.signature === "" ? null : patch.signature,
-      });
+      const { signature, ...fields } = patch;
+
+      await save(
+        signature === undefined
+          ? { id: saved.id, ...fields }
+          : { id: saved.id, ...fields, signature: signature === "" ? null : signature },
+      );
       setSavedAt(Date.now());
       setProblem("");
     } catch (error) {
@@ -108,7 +109,9 @@ const Editor = ({ saved }: { saved: Saved }) => {
     setSaving(false);
   };
 
-  const flushLater = useEffectEvent(() => void flush());
+  const flushSoon = () => {
+    void flush();
+  };
 
   const change = (patch: Partial<Draft>) => {
     setDraft((current) => ({ ...current, ...patch }));
@@ -118,26 +121,31 @@ const Editor = ({ saved }: { saved: Saved }) => {
       clearTimeout(timer.current);
     }
 
-    timer.current = setTimeout(flushLater, 600);
+    timer.current = setTimeout(flushSoon, 600);
   };
 
-  useEffect(() => {
+  useSubscription(() => {
     const beat = setInterval(() => {
       setTick((n) => n + 1);
     }, 5000);
 
-    const leave = () => {
-      flushLater();
-    };
-
-    addEventListener("pagehide", leave);
-
     return () => {
       clearInterval(beat);
-      removeEventListener("pagehide", leave);
-      flushLater();
     };
   }, []);
+
+  useListener(
+    (leave) => {
+      addEventListener("pagehide", leave);
+
+      return () => {
+        removeEventListener("pagehide", leave);
+        leave();
+      };
+    },
+    flushSoon,
+    [],
+  );
 
   const delivery = useMemo(
     () =>
@@ -152,27 +160,36 @@ const Editor = ({ saved }: { saved: Saved }) => {
           initial: draft.initial || null,
           city: draft.city,
           openWhen: draft.openWhen || null,
-          sealedAt: published ? saved.sealedAt : Date.now(),
+          sealedAt: published ? saved.sealedAt : saved.updatedAt,
           timeZone: saved.timeZone,
         },
         {
           body: draft.body || "Your letter appears here as you write it.",
-          signature: draft.signature || null,
-          voice: saved.voice?.url ? { url: saved.voice.url, seconds: saved.voice.seconds } : null,
+          signature: draft.signature === "" ? null : draft.signature,
+          voice:
+            saved.voice === null || saved.voice.url === null
+              ? null
+              : { url: saved.voice.url, seconds: saved.voice.seconds },
         },
       ),
-    [draft, saved.token, saved.voice, saved.sealedAt, saved.timeZone, published],
+    [draft, saved.token, saved.voice, saved.sealedAt, saved.timeZone, published, saved.updatedAt],
   );
 
-  const current = steps[step.index];
+  const shownStep = steps[step.index] ?? steps[0];
   const count = words(draft.body);
   const minutes = Math.max(1, Math.round(count / 200));
 
-  const state = saving
-    ? "Saving…"
-    : published
-      ? `Published · changes go live as you type`
-      : `Draft · saved ${ago(savedAt)}`;
+  const state = stateLine(saving, published, savedAt);
+
+  const deleteLetter = async () => {
+    // oxlint-disable-next-line no-alert -- deleting is rare and can't be undone, and the browser's own confirm is the clearest check
+    if (!confirm("Delete this letter? Its link stops working.")) {
+      return;
+    }
+
+    await remove({ id: saved.id });
+    router.push("/letters");
+  };
 
   const seal = async () => {
     await flush();
@@ -196,18 +213,15 @@ const Editor = ({ saved }: { saved: Saved }) => {
         <div className="w-bar-actions">
           <div className="w-segments w-device" role="radiogroup" aria-label="Preview size">
             {(["phone", "desktop"] as const).map((kind) => (
-              <button
+              <Choice
                 key={kind}
-                type="button"
-                role="radio"
-                aria-checked={device === kind}
-                className={device === kind ? "w-on" : ""}
-                onClick={() => {
+                on={device === kind}
+                onPick={() => {
                   setDevice(kind);
                 }}
               >
                 {kind === "phone" ? "Phone" : "Desktop"}
-              </button>
+              </Choice>
             ))}
           </div>
           <button
@@ -219,7 +233,13 @@ const Editor = ({ saved }: { saved: Saved }) => {
           >
             Preview
           </button>
-          <button type="button" className="w-button w-accent" onClick={seal}>
+          <button
+            type="button"
+            className="w-button w-accent"
+            onClick={() => {
+              void seal();
+            }}
+          >
             {published ? "Share" : "Seal and publish"}
           </button>
         </div>
@@ -249,13 +269,8 @@ const Editor = ({ saved }: { saved: Saved }) => {
             <button
               type="button"
               className="w-text-button w-danger"
-              onClick={async () => {
-                if (!confirm("Delete this letter? Its link stops working.")) {
-                  return;
-                }
-
-                await remove({ id: saved.id });
-                router.push("/letters");
+              onClick={() => {
+                void deleteLetter();
               }}
             >
               Delete this letter
@@ -295,8 +310,8 @@ const Editor = ({ saved }: { saved: Saved }) => {
           </div>
           <PreviewFrame
             delivery={delivery}
-            stage={current.stage}
-            end={current.end}
+            stage={shownStep.stage}
+            end={shownStep.end}
             run={step.run}
             device={device}
           />
@@ -309,7 +324,7 @@ const Editor = ({ saved }: { saved: Saved }) => {
                 aria-selected={index === step.index}
                 className={index === step.index ? "w-on" : ""}
                 onClick={() => {
-                  setStep((current) => ({ index, run: current.run + 1 }));
+                  setStep((previous) => ({ index, run: previous.run + 1 }));
                 }}
               >
                 {s.name}
@@ -324,6 +339,7 @@ const Editor = ({ saved }: { saved: Saved }) => {
       </div>
 
       {full && (
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a full-window layer the page draws itself; a <dialog> would bring its own modal styles and top layer
         <div className="w-full-preview" role="dialog" aria-label="Preview">
           <PreviewFrame
             delivery={delivery}
@@ -365,4 +381,14 @@ const Editor = ({ saved }: { saved: Saved }) => {
       )}
     </div>
   );
+};
+
+export const Composer = ({ id }: { id: string }) => {
+  const saved = useQuery(api.writer.byId, { id });
+
+  if (saved === undefined) {
+    return <div className="writer w-loading" />;
+  }
+
+  return <Editor key={id} saved={saved} />;
 };

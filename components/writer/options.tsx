@@ -48,7 +48,7 @@ interface Props {
 const keysOf = <K extends string, V>(catalog: Record<K, V>) =>
   Object.keys(catalog).filter((key): key is K => Object.hasOwn(catalog, key));
 
-const Choice = ({
+export const Choice = ({
   on,
   onPick,
   kind = "",
