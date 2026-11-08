@@ -4,14 +4,18 @@ import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+
 import type { Stage } from "@/components/mail/experience";
 import { seedFrom } from "@/components/mail/seal";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toDelivery } from "@/lib/delivery";
-import { defaultStyle, resolveTheme, type Style, type ThemeKey } from "@/lib/theme";
 import { deskProps } from "@/lib/texture";
-import { type Fields, Options } from "./options";
+import { defaultStyle, resolveTheme } from "@/lib/theme";
+import type { Style, ThemeKey } from "@/lib/theme";
+
+import { Options } from "./options";
+import type { Fields } from "./options";
 import { PaperEditor, words } from "./paper-editor";
 import { PreviewFrame } from "./preview-frame";
 import { PublishDialog } from "./publish-dialog";
@@ -22,37 +26,37 @@ type Saved = NonNullable<ReturnType<typeof useQuery<typeof api.writer.letter>>>;
 
 type Draft = Fields & { body: string };
 
-const steps: ReadonlyArray<{ name: string; stage: Stage; end: boolean }> = [
+const steps: readonly { name: string; stage: Stage; end: boolean }[] = [
   { name: "Envelope", stage: "front", end: false },
   { name: "Seal", stage: "back", end: false },
   { name: "Letter", stage: "read", end: false },
   { name: "End", stage: "read", end: true },
 ];
 
-function fromSaved(saved: Saved): Draft {
-  return {
-    theme: saved.theme,
-    style: saved.style ?? defaultStyle(saved.theme),
-    to: saved.to,
-    toPlace: saved.toPlace,
-    from: saved.from,
-    initial: saved.initial ?? "",
-    city: saved.city,
-    openWhen: saved.openWhen,
-    signature: saved.signature,
-    body: saved.body,
-  };
-}
+const fromSaved = (saved: Saved): Draft => ({
+  theme: saved.theme,
+  style: saved.style ?? defaultStyle(saved.theme),
+  to: saved.to,
+  toPlace: saved.toPlace,
+  from: saved.from,
+  initial: saved.initial ?? "",
+  city: saved.city,
+  openWhen: saved.openWhen,
+  signature: saved.signature,
+  body: saved.body,
+});
 
-export function Composer({ id }: { id: Id<"letters"> }) {
+export const Composer = ({ id }: { id: Id<"letters"> }) => {
   const saved = useQuery(api.writer.letter, { id });
 
-  if (saved === undefined) return <div className="writer w-loading" />;
+  if (saved === undefined) {
+    return <div className="writer w-loading" />;
+  }
 
   return <Editor key={id} saved={saved} />;
-}
+};
 
-function Editor({ saved }: { saved: Saved }) {
+const Editor = ({ saved }: { saved: Saved }) => {
   const save = useMutation(api.writer.save);
   const remove = useMutation(api.writer.remove);
   const router = useRouter();
@@ -71,39 +75,62 @@ function Editor({ saved }: { saved: Saved }) {
   const look = resolveTheme(draft.theme, draft.style);
   const published = saved.status === "published";
 
-  async function flush() {
-    if (timer.current) clearTimeout(timer.current);
+  const flush = async () => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+    }
+
     timer.current = null;
     const patch = pending.current;
     pending.current = {};
 
-    if (Object.keys(patch).length === 0) return;
+    if (Object.keys(patch).length === 0) {
+      return;
+    }
+
     setSaving(true);
 
     try {
-      await save({ id: saved.id, ...patch, signature: patch.signature === "" ? null : patch.signature });
+      await save({
+        id: saved.id,
+        ...patch,
+        signature: patch.signature === "" ? null : patch.signature,
+      });
       setSavedAt(Date.now());
       setProblem("");
     } catch (error) {
-      setProblem(error instanceof Error ? error.message.replace(/^.*ConvexError: /, "") : "That didn't save.");
+      setProblem(
+        error instanceof Error
+          ? error.message.replace(/^.*ConvexError: /, "")
+          : "That didn't save.",
+      );
     }
 
     setSaving(false);
-  }
+  };
 
   const flushLater = useEffectEvent(() => void flush());
 
-  function change(patch: Partial<Draft>) {
+  const change = (patch: Partial<Draft>) => {
     setDraft((current) => ({ ...current, ...patch }));
     Object.assign(pending.current, patch);
 
-    if (timer.current) clearTimeout(timer.current);
+    if (timer.current) {
+      clearTimeout(timer.current);
+    }
+
     timer.current = setTimeout(flushLater, 600);
-  }
+  };
 
   useEffect(() => {
-    const beat = setInterval(() => setTick((n) => n + 1), 5000);
-    const leave = () => flushLater();
+    const beat = setInterval(() => {
+      setTick((n) => n + 1);
+    }, 5000);
+
+    const leave = () => {
+      flushLater();
+    };
+
     addEventListener("pagehide", leave);
 
     return () => {
@@ -148,10 +175,10 @@ function Editor({ saved }: { saved: Saved }) {
       ? `Published · changes go live as you type`
       : `Draft · saved ${ago(savedAt)}`;
 
-  async function seal() {
+  const seal = async () => {
     await flush();
     setPublishing(true);
-  }
+  };
 
   return (
     <div className="writer w-composer">
@@ -176,13 +203,21 @@ function Editor({ saved }: { saved: Saved }) {
                 role="radio"
                 aria-checked={device === kind}
                 className={device === kind ? "w-on" : ""}
-                onClick={() => setDevice(kind)}
+                onClick={() => {
+                  setDevice(kind);
+                }}
               >
                 {kind === "phone" ? "Phone" : "Desktop"}
               </button>
             ))}
           </div>
-          <button type="button" className="w-button" onClick={() => setFull(true)}>
+          <button
+            type="button"
+            className="w-button"
+            onClick={() => {
+              setFull(true);
+            }}
+          >
             Preview
           </button>
           <button type="button" className="w-button w-accent" onClick={seal}>
@@ -197,9 +232,15 @@ function Editor({ saved }: { saved: Saved }) {
             fields={draft}
             look={look}
             seed={seed}
-            onTheme={(theme: ThemeKey) => change({ theme, style: defaultStyle(theme) })}
-            onStyle={(style: Partial<Style>) => change({ style: { ...draft.style, ...style } })}
-            onField={(field) => change(field)}
+            onTheme={(theme: ThemeKey) => {
+              change({ theme, style: defaultStyle(theme) });
+            }}
+            onStyle={(style: Partial<Style>) => {
+              change({ style: { ...draft.style, ...style } });
+            }}
+            onField={(field) => {
+              change(field);
+            }}
           />
           <section className="w-section">
             <h2 className="w-label">Extras</h2>
@@ -210,7 +251,10 @@ function Editor({ saved }: { saved: Saved }) {
               type="button"
               className="w-text-button w-danger"
               onClick={async () => {
-                if (!confirm("Delete this letter? Its link stops working.")) return;
+                if (!confirm("Delete this letter? Its link stops working.")) {
+                  return;
+                }
+
                 await remove({ id: saved.id });
                 router.push("/letters");
               }}
@@ -228,13 +272,18 @@ function Editor({ saved }: { saved: Saved }) {
                   <span className="w-paper-mark">{delivery.initial}</span>
                   <span className="sheet-date">{delivery.letter.date}</span>
                 </div>
-                <PaperEditor body={draft.body} onChange={(body) => change({ body })} />
+                <PaperEditor
+                  body={draft.body}
+                  onChange={(body) => {
+                    change({ body });
+                  }}
+                />
               </div>
             </div>
             <div className="w-paper-foot">
               <span>
-                {count} {count === 1 ? "word" : "words"} · about {minutes === 1 ? "a minute" : `${minutes} minutes`} to
-                read
+                {count} {count === 1 ? "word" : "words"} · about{" "}
+                {minutes === 1 ? "a minute" : `${minutes} minutes`} to read
               </span>
               <span>Paste text or write here · ⌘B bold · ⌘I italic</span>
             </div>
@@ -245,7 +294,13 @@ function Editor({ saved }: { saved: Saved }) {
           <div className="w-live-head">
             <h2 className="w-label">Live preview</h2>
           </div>
-          <PreviewFrame delivery={delivery} stage={current.stage} end={current.end} run={step.run} device={device} />
+          <PreviewFrame
+            delivery={delivery}
+            stage={current.stage}
+            end={current.end}
+            run={step.run}
+            device={device}
+          />
           <div className="w-segments w-steps" role="tablist" aria-label="Step through the opening">
             {steps.map((s, index) => (
               <button
@@ -254,23 +309,37 @@ function Editor({ saved }: { saved: Saved }) {
                 role="tab"
                 aria-selected={index === step.index}
                 className={index === step.index ? "w-on" : ""}
-                onClick={() => setStep((current) => ({ index, run: current.run + 1 }))}
+                onClick={() => {
+                  setStep((current) => ({ index, run: current.run + 1 }));
+                }}
               >
                 {s.name}
               </button>
             ))}
           </div>
           <p className="w-soft w-live-note">
-            Every change shows here as {draft.to || "they"} will see it. Step through the opening to check the seal and
-            the liner.
+            Every change shows here as {draft.to || "they"} will see it. Step through the opening to
+            check the seal and the liner.
           </p>
         </aside>
       </div>
 
       {full && (
         <div className="w-full-preview" role="dialog" aria-label="Preview">
-          <PreviewFrame delivery={delivery} stage="front" end={false} run={step.run} device="fill" />
-          <button type="button" className="w-button w-full-close" onClick={() => setFull(false)}>
+          <PreviewFrame
+            delivery={delivery}
+            stage="front"
+            end={false}
+            run={step.run}
+            device="fill"
+          />
+          <button
+            type="button"
+            className="w-button w-full-close"
+            onClick={() => {
+              setFull(false);
+            }}
+          >
             Close preview
           </button>
         </div>
@@ -290,9 +359,11 @@ function Editor({ saved }: { saved: Saved }) {
           savedKey={saved.key}
           previewReady={saved.previewReady}
           notify={saved.notify}
-          onClose={() => setPublishing(false)}
+          onClose={() => {
+            setPublishing(false);
+          }}
         />
       )}
     </div>
   );
-}
+};

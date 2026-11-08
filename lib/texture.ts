@@ -1,20 +1,16 @@
 import type { Rgb, Theme } from "./theme";
 
-function svgUrl(svg: string) {
-  return `url(data:image/svg+xml;base64,${btoa(svg)})`;
-}
+const svgUrl = (svg: string) => `url(data:image/svg+xml;base64,${btoa(svg)})`;
 
-export function grain(alpha: number, frequency: number, [r, g, b]: Rgb) {
-  return svgUrl(
+export const grain = (alpha: number, frequency: number, [r, g, b]: Rgb) =>
+  svgUrl(
     `<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='${frequency}' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 ${r} 0 0 0 0 ${g} 0 0 0 0 ${b} 0 0 0 ${alpha} 0'/></filter><rect width='100%' height='100%' filter='url(#f)'/></svg>`,
   );
-}
 
-export function mottle(alpha: number, [r, g, b]: Rgb) {
-  return svgUrl(
+export const mottle = (alpha: number, [r, g, b]: Rgb) =>
+  svgUrl(
     `<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 ${r} 0 0 0 0 ${g} 0 0 0 0 ${b} 0 0 0 ${alpha * 6} -${alpha * 2.2}'/></filter><rect width='100%' height='100%' filter='url(#m)'/></svg>`,
   );
-}
 
 const laid =
   "repeating-linear-gradient(90deg, rgba(120,90,60,0) 0px, rgba(120,90,60,0) 5px, rgba(120,90,60,0.045) 5px, rgba(120,90,60,0.045) 6px)";
@@ -24,13 +20,13 @@ type Edge = "top" | "bottom" | "left" | "right";
 const tile = 240;
 const depth = 5;
 
-function tornEdge(edge: Edge, seed: number) {
+const tornEdge = (edge: Edge, seed: number) => {
   let a = seed;
 
   const next = () => {
-    a = (a * 16807) % 2147483647;
+    a = (a * 16_807) % 2_147_483_647;
 
-    return a / 2147483647;
+    return a / 2_147_483_647;
   };
 
   let wander = 1.8;
@@ -66,7 +62,7 @@ function tornEdge(edge: Edge, seed: number) {
   return svgUrl(
     `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><path d='M${inner} L${line(fibres)} L${innerEnd} Z' fill-opacity='0.4'/><path d='M${inner} L${line(bites)} L${innerEnd} Z'/></svg>`,
   );
-}
+};
 
 const deckle = {
   "--deckle-top": tornEdge("top", 7),
@@ -75,7 +71,7 @@ const deckle = {
   "--deckle-right": tornEdge("right", 17),
 };
 
-export function themeStyle(theme: Theme) {
+export const themeStyle = (theme: Theme) => {
   const paperGrain = theme.paperDark ? 0.07 : 0.11;
   const paperMottle = theme.paperDark ? 0.006 : 0.016;
   const envelopeDark = theme.key === "midnight";
@@ -101,15 +97,13 @@ export function themeStyle(theme: Theme) {
   };
 
   return theme.style.finish === "deckle" ? { ...style, ...deckle } : style;
-}
+};
 
-export function deskProps(theme: Theme) {
-  return {
-    style: themeStyle(theme),
-    "data-theme": theme.key,
-    "data-face": theme.style.typeface,
-    "data-finish": theme.style.finish,
-    "data-light": theme.darkDesk ? undefined : "",
-    "data-paper-dark": theme.paperDark ? "" : undefined,
-  };
-}
+export const deskProps = (theme: Theme) => ({
+  style: themeStyle(theme),
+  "data-theme": theme.key,
+  "data-face": theme.style.typeface,
+  "data-finish": theme.style.finish,
+  "data-light": theme.darkDesk ? undefined : "",
+  "data-paper-dark": theme.paperDark ? "" : undefined,
+});

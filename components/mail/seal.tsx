@@ -1,20 +1,21 @@
 import { useId } from "react";
+
 import type { EmblemKey, Theme } from "@/lib/theme";
 
-function random(seed: number) {
+const random = (seed: number) => {
   let a = seed >>> 0;
 
   return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
+    a = (a + 0x6d_2b_79_f5) >>> 0;
     let t = a;
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
 
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
   };
-}
+};
 
-function blob(cx: number, cy: number, r: number, seed: number) {
+const blob = (cx: number, cy: number, r: number, seed: number) => {
   const next = random(seed);
   const phase = [next(), next(), next(), next()].map((p) => p * Math.PI * 2);
 
@@ -32,14 +33,14 @@ function blob(cx: number, cy: number, r: number, seed: number) {
   });
 
   return `M${points.join(" L")} Z`;
-}
+};
 
 const size = 84;
 const center = size / 2;
 const radius = size * 0.44;
 const inner = radius * 0.66;
 
-const crack: ReadonlyArray<readonly [number, number]> = [
+const crack: readonly (readonly [number, number])[] = [
   [center - 2, center - radius],
   [center + 3, center - radius * 0.45],
   [center - 3, center - radius * 0.05],
@@ -55,8 +56,8 @@ const emblemPaths = {
   moon: "M2,-10 C-4,-10 -9,-5 -9,1 C-9,6 -5,10 1,10 C5,10 8,8 9,5 C6,7 1,7 -2,4 C-5,1 -5,-5 2,-10 Z",
 };
 
-export function Emblem({ kind }: { kind: Exclude<EmblemKey, "initial"> }) {
-  if (kind === "flower")
+export const Emblem = ({ kind }: { kind: Exclude<EmblemKey, "initial"> }) => {
+  if (kind === "flower") {
     return (
       <g>
         {[0, 60, 120, 180, 240, 300].map((a) => (
@@ -64,19 +65,27 @@ export function Emblem({ kind }: { kind: Exclude<EmblemKey, "initial"> }) {
         ))}
       </g>
     );
+  }
 
-  if (kind === "snail")
+  if (kind === "snail") {
     return (
-      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" transform="translate(-1 -1)">
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        transform="translate(-1 -1)"
+      >
         <path d="M-10,8 L10,8 C13,8 14,5 12,3" />
         <path d="M-10,8 C-12,2 -7,-8 1,-8 C9,-8 11,0 6,4 C2,7 -4,5 -4,0 C-4,-4 2,-5 3,-2" />
       </g>
     );
+  }
 
   return <path d={emblemPaths[kind]} />;
-}
+};
 
-function Impression({ theme, initial }: { theme: Theme; initial: string }) {
+const Impression = ({ theme, initial }: { theme: Theme; initial: string }) => {
   const kind = theme.style.emblem;
 
   if (kind === "initial") {
@@ -106,15 +115,20 @@ function Impression({ theme, initial }: { theme: Theme; initial: string }) {
       >
         <Emblem kind={kind} />
       </g>
-      <g transform={`translate(${center},${center}) scale(${k})`} fill={theme.waxLo} color={theme.waxLo} opacity="0.85">
+      <g
+        transform={`translate(${center},${center}) scale(${k})`}
+        fill={theme.waxLo}
+        color={theme.waxLo}
+        opacity="0.85"
+      >
         <Emblem kind={kind} />
         {kind === "flower" && <circle r="2.6" fill={theme.wax} />}
       </g>
     </g>
   );
-}
+};
 
-function SealBody({ theme, initial, seed }: { theme: Theme; initial: string; seed: number }) {
+const SealBody = ({ theme, initial, seed }: { theme: Theme; initial: string; seed: number }) => {
   const id = useId();
 
   return (
@@ -164,19 +178,28 @@ function SealBody({ theme, initial, seed }: { theme: Theme; initial: string; see
       />
     </g>
   );
+};
+
+interface SealProps {
+  theme: Theme;
+  initial: string;
+  seed: number;
+  className?: string;
 }
 
-type SealProps = { theme: Theme; initial: string; seed: number; className?: string };
+export const WaxSeal = ({ theme, initial, seed, className }: SealProps) => (
+  <svg viewBox={`0 0 ${size} ${size}`} className={className} aria-hidden>
+    <SealBody theme={theme} initial={initial} seed={seed} />
+  </svg>
+);
 
-export function WaxSeal({ theme, initial, seed, className }: SealProps) {
-  return (
-    <svg viewBox={`0 0 ${size} ${size}`} className={className} aria-hidden>
-      <SealBody theme={theme} initial={initial} seed={seed} />
-    </svg>
-  );
-}
-
-export function HalfSeal({ theme, initial, seed, side, className }: SealProps & { side: "left" | "right" }) {
+export const HalfSeal = ({
+  theme,
+  initial,
+  seed,
+  side,
+  className,
+}: SealProps & { side: "left" | "right" }) => {
   const id = useId();
   const edge = side === "left" ? 0 : size;
 
@@ -184,21 +207,30 @@ export function HalfSeal({ theme, initial, seed, side, className }: SealProps & 
     <svg viewBox={`0 0 ${size} ${size}`} className={className} aria-hidden>
       <defs>
         <clipPath id={id}>
-          <path d={`M${edge},0 L${center - 2},0 ${crackPath} L${center},${size} L${edge},${size} Z`} />
+          <path
+            d={`M${edge},0 L${center - 2},0 ${crackPath} L${center},${size} L${edge},${size} Z`}
+          />
         </clipPath>
       </defs>
       <g clipPath={`url(#${id})`}>
         <SealBody theme={theme} initial={initial} seed={seed} />
-        <path d={`M${crack[0][0]},${crack[0][1]} ${crackPath}`} fill="none" stroke={theme.waxLo} strokeWidth="1.6" />
+        <path
+          d={`M${crack[0][0]},${crack[0][1]} ${crackPath}`}
+          fill="none"
+          stroke={theme.waxLo}
+          strokeWidth="1.6"
+        />
       </g>
     </svg>
   );
-}
+};
 
-export function seedFrom(text: string) {
-  let h = 2166136261;
+export const seedFrom = (text: string) => {
+  let h = 2_166_136_261;
 
-  for (const char of text) h = Math.imul(h ^ char.charCodeAt(0), 16777619);
+  for (const char of text) {
+    h = Math.imul(h ^ char.charCodeAt(0), 16_777_619);
+  }
 
   return h >>> 0;
-}
+};

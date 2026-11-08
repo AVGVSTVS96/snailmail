@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+
 import { unindexed as value } from "./lib/crawlers";
 
 const unindexed = [{ key: "X-Robots-Tag", value }];

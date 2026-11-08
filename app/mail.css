@@ -147,7 +147,8 @@ html:has(.desk) {
   display: grid;
   grid-template-rows: auto 1fr auto;
   justify-items: center;
-  padding: max(40px, calc(env(safe-area-inset-top) + 38px)) 0 max(40px, calc(env(safe-area-inset-bottom) + 24px));
+  padding: max(40px, calc(env(safe-area-inset-top) + 38px)) 0
+    max(40px, calc(env(safe-area-inset-bottom) + 24px));
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -1089,7 +1090,8 @@ html:has(.desk) {
   opacity: 0;
   translate: 0 8px;
 }
-.keep[data-shown] :is(.keep-seal, .keep-title, .keep-text, .keep-primary, .keep-secondary, .keep-note) {
+.keep[data-shown]
+  :is(.keep-seal, .keep-title, .keep-text, .keep-primary, .keep-secondary, .keep-note) {
   transition:
     opacity 500ms var(--ease-out),
     translate 500ms var(--ease-out),

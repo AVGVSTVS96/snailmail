@@ -4,26 +4,31 @@ import { useRef, useState } from "react";
 
 const bars = [4, 8, 12, 7, 14, 10, 6, 12, 16, 9, 5, 11, 7, 13, 8, 4, 9, 6];
 
-export function duration(seconds: number) {
+export const duration = (seconds: number) => {
   const s = Math.max(0, Math.round(seconds));
 
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-}
+};
 
-export function VoiceNote({ url, seconds }: { url: string; seconds: number }) {
+export const VoiceNote = ({ url, seconds }: { url: string; seconds: number }) => {
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const played = Math.round(progress * bars.length);
 
-  function toggle() {
+  const toggle = () => {
     const player = audio.current;
 
-    if (!player) return;
+    if (!player) {
+      return;
+    }
 
-    if (player.paused) void player.play();
-    else player.pause();
-  }
+    if (player.paused) {
+      void player.play();
+    } else {
+      player.pause();
+    }
+  };
 
   return (
     <button
@@ -61,8 +66,12 @@ export function VoiceNote({ url, seconds }: { url: string; seconds: number }) {
         ref={audio}
         src={url}
         preload="none"
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
+        onPlay={() => {
+          setPlaying(true);
+        }}
+        onPause={() => {
+          setPlaying(false);
+        }}
         onEnded={() => {
           setPlaying(false);
           setProgress(0);
@@ -74,4 +83,4 @@ export function VoiceNote({ url, seconds }: { url: string; seconds: number }) {
       />
     </button>
   );
-}
+};

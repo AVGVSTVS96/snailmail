@@ -1,4 +1,6 @@
 {
-  "printWidth": 120,
-  "ignorePatterns": ["convex/_generated/**", "tools/oxlint/anti-slop/**"]
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": ["convex/_generated/**"],
+  "sortImports": true,
+  "sortTailwindcss": { "stylesheet": "./app/globals.css" }
 }

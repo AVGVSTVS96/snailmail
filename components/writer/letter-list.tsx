@@ -4,30 +4,43 @@ import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
 import { seedFrom } from "@/components/mail/seal";
 import { api } from "@/convex/_generated/api";
 import { letterLink } from "@/lib/links";
 import { resolveTheme } from "@/lib/theme";
+
 import { Credit, MiniEnvelope } from "./chrome";
 import { CopyButton } from "./copy";
 import { Nav } from "./nav";
 import { useHosts } from "./providers";
 import { ago, day } from "./time";
 
-function opened(opens: number, at: number | null) {
-  if (opens === 0) return { main: "Not opened yet", sub: "" };
+const opened = (opens: number, at: number | null) => {
+  if (opens === 0) {
+    return { main: "Not opened yet", sub: "" };
+  }
 
-  return { main: opens === 1 ? "Opened once" : `Opened ${opens} times`, sub: at ? `last ${ago(at)}` : "" };
-}
+  return {
+    main: opens === 1 ? "Opened once" : `Opened ${opens} times`,
+    sub: at ? `last ${ago(at)}` : "",
+  };
+};
 
-function count(sent: number, drafts: number) {
-  if (sent + drafts === 0) return "Nothing sealed yet";
-  const parts = [sent ? `${sent} sent` : "", drafts ? `${drafts} ${drafts === 1 ? "draft" : "drafts"}` : ""];
+const count = (sent: number, drafts: number) => {
+  if (sent + drafts === 0) {
+    return "Nothing sealed yet";
+  }
+
+  const parts = [
+    sent ? `${sent} sent` : "",
+    drafts ? `${drafts} ${drafts === 1 ? "draft" : "drafts"}` : "",
+  ];
 
   return parts.filter(Boolean).join(", ");
-}
+};
 
-export function LetterList() {
+export const LetterList = () => {
   const letters = useQuery(api.writer.letters);
   const create = useMutation(api.writer.create);
   const router = useRouter();
@@ -35,7 +48,7 @@ export function LetterList() {
   const { user } = useAuth();
   const [making, setMaking] = useState(false);
 
-  async function newLetter() {
+  const newLetter = async () => {
     setMaking(true);
 
     const id = await create({
@@ -44,7 +57,7 @@ export function LetterList() {
     });
 
     router.push(`/letters/${id}`);
-  }
+  };
 
   const sent = letters?.filter((letter) => letter.status === "published").length ?? 0;
   const drafts = (letters?.length ?? 0) - sent;
@@ -58,7 +71,12 @@ export function LetterList() {
             <h1>Letters</h1>
             <p className="w-count">{letters ? count(sent, drafts) : " "}</p>
           </div>
-          <button type="button" className="w-button w-primary" onClick={newLetter} disabled={making}>
+          <button
+            type="button"
+            className="w-button w-primary"
+            onClick={newLetter}
+            disabled={making}
+          >
             <svg viewBox="0 0 16 16" aria-hidden>
               <path d="M8 2.5v11M2.5 8h11" />
             </svg>
@@ -91,7 +109,12 @@ export function LetterList() {
                 const initial = (letter.initial || letter.from.slice(0, 1) || "S").toUpperCase();
 
                 return (
-                  <tr key={letter.id} onClick={() => router.push(`/letters/${letter.id}`)}>
+                  <tr
+                    key={letter.id}
+                    onClick={() => {
+                      router.push(`/letters/${letter.id}`);
+                    }}
+                  >
                     <td>
                       <div className="w-letter-cell">
                         <MiniEnvelope
@@ -115,7 +138,14 @@ export function LetterList() {
                     <td data-label="Link">
                       {published ? (
                         <span className="w-link">
-                          <a href={link} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>
+                          <a
+                            href={link}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                            }}
+                          >
                             {link.replace(/^https?:\/\//, "")}
                           </a>
                           <CopyButton text={link} />
@@ -134,7 +164,9 @@ export function LetterList() {
                         <span className="w-faint">—</span>
                       )}
                     </td>
-                    <td data-label="Updated">{published ? day(letter.sealedAt) : `Edited ${ago(letter.updatedAt)}`}</td>
+                    <td data-label="Updated">
+                      {published ? day(letter.sealedAt) : `Edited ${ago(letter.updatedAt)}`}
+                    </td>
                   </tr>
                 );
               })}
@@ -149,4 +181,4 @@ export function LetterList() {
       </main>
     </div>
   );
-}
+};

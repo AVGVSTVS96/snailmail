@@ -1,19 +1,30 @@
 "use client";
 
 import Link from "next/link";
+import {
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { flushSync } from "react-dom";
-import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { Theme } from "@/lib/theme";
+
 import { looksFoldable, watchFold } from "@/lib/fold";
 import { tap } from "@/lib/haptics";
 import { deskProps } from "@/lib/texture";
-import { type Address, Envelope } from "./envelope";
+import type { Theme } from "@/lib/theme";
+
+import { Envelope } from "./envelope";
+import type { Address } from "./envelope";
 import { HalfSeal } from "./seal";
-import { type Letter, SheetContent, type Words } from "./sheet";
+import { SheetContent } from "./sheet";
+import type { Letter, Words } from "./sheet";
 
 export type Stage = "front" | "back" | "open" | "unfold" | "read";
 
-export type Delivery = {
+export interface Delivery {
   token: string;
   theme: Theme;
   address: Address;
@@ -25,7 +36,7 @@ export type Delivery = {
   signedFrom: string;
   sealedLine: string;
   sealedOn: string;
-};
+}
 
 const holdMs = 900;
 const ringLength = 2 * Math.PI * 46;
@@ -33,47 +44,54 @@ const ringLength = 2 * Math.PI * 46;
 const tableQuery = "(min-width: 600px) and (min-height: 480px)";
 const foldableKey = "snailmail:foldable";
 
-function useMedia(query: string) {
-  return useSyncExternalStore(
+const useMedia = (query: string) =>
+  useSyncExternalStore(
     (onChange) => {
       const list = matchMedia(query);
       list.addEventListener("change", onChange);
 
-      return () => list.removeEventListener("change", onChange);
+      return () => {
+        list.removeEventListener("change", onChange);
+      };
     },
     () => matchMedia(query).matches,
     () => false,
   );
-}
 
-function subscribeNever() {
-  return () => {};
-}
+const subscribeNever = () => () => {};
 
-function activate(action: () => void) {
-  return (event: React.KeyboardEvent) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    action();
-  };
-}
+const activate = (action: () => void) => (event: React.KeyboardEvent) => {
+  if (event.key !== "Enter" && event.key !== " ") {
+    return;
+  }
+  event.preventDefault();
+  action();
+};
 
 // Folding, unfolding or turning the phone rewraps every line of the letter, so the reader stays at the same line.
-function keepPlace() {
+const keepPlace = () => {
   const parts = ".sheet-head, .sheet-p, .sheet-close > *, .sealed-line, .keep, .credit";
   let place: { part: Element; into: number; width: number } | null = null;
   const width = () => document.documentElement.clientWidth;
 
   const remember = () => {
-    if (place && place.width !== width()) return;
+    if (place && place.width !== width()) {
+      return;
+    }
+
     place = null;
 
-    if (scrollY < 1) return;
+    if (scrollY < 1) {
+      return;
+    }
 
     for (const part of document.querySelectorAll(parts)) {
       const { top, height } = part.getBoundingClientRect();
 
-      if (top + height <= 0) continue;
+      if (top + height <= 0) {
+        continue;
+      }
+
       place = { part, into: height > 0 ? -top / height : 0, width: width() };
 
       return;
@@ -81,7 +99,10 @@ function keepPlace() {
   };
 
   const restore = () => {
-    if (!place || place.width === width()) return;
+    if (!place || place.width === width()) {
+      return;
+    }
+
     const { top, height } = place.part.getBoundingClientRect();
     scrollBy(0, top + place.into * height);
     place.width = width();
@@ -95,9 +116,15 @@ function keepPlace() {
     removeEventListener("scroll", remember);
     removeEventListener("resize", restore);
   };
-}
+};
 
-export function Experience({ delivery, start = "front" }: { delivery: Delivery; start?: Stage }) {
+export const Experience = ({
+  delivery,
+  start = "front",
+}: {
+  delivery: Delivery;
+  start?: Stage;
+}) => {
   const { theme, address, seed, initial, token } = delivery;
   const [stage, setStage] = useState<Stage>(start);
   const [words, setWords] = useState(delivery.words ?? null);
@@ -128,32 +155,55 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme.surface);
   }, [theme.surface]);
 
-  const autoUnfold = useEffectEvent(() => unfold());
+  const autoUnfold = useEffectEvent(() => {
+    unfold();
+  });
 
-  const finishUnfold = useEffectEvent(() => change(() => setStage("read")));
+  const finishUnfold = useEffectEvent(() => {
+    change(() => {
+      setStage("read");
+    });
+  });
 
   useEffect(() => {
-    if (stage !== "open" || (unfoldLast && !table)) return;
+    if (stage !== "open" || (unfoldLast && !table)) {
+      return;
+    }
+
     const timer = setTimeout(autoUnfold, unfoldLast ? 2000 : 4200);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [stage, unfoldLast, table]);
 
-  const refit = useEffectEvent(() => fitOpenEnvelope());
+  const refit = useEffectEvent(() => {
+    fitOpenEnvelope();
+  });
 
   useEffect(() => {
-    if (stage !== "open" || !stageArea.current) return;
+    if (stage !== "open" || !stageArea.current) {
+      return;
+    }
+
     const observer = new ResizeObserver(refit);
     observer.observe(stageArea.current);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, [stage]);
 
   useEffect(() => {
-    if (stage !== "unfold") return;
+    if (stage !== "unfold") {
+      return;
+    }
+
     const timer = setTimeout(finishUnfold, reduced ? 350 : 1550);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [stage, reduced]);
 
   const onUnfold = useEffectEvent(() => {
@@ -165,13 +215,17 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
   useEffect(() => watchFold((fold) => fold === "unfold" && onUnfold()), []);
 
   useEffect(() => {
-    if (stage !== "read") return;
+    if (stage !== "read") {
+      return;
+    }
 
     return keepPlace();
   }, [stage]);
 
   useEffect(() => {
-    if (stage !== "read" || reduced) return;
+    if (stage !== "read" || reduced) {
+      return;
+    }
 
     const below = [...document.querySelectorAll(".sheet-sign, .sheet-drawn, .keep")].filter(
       (element) => element.getBoundingClientRect().top > innerHeight,
@@ -180,8 +234,11 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          entry.target.setAttribute("data-shown", "");
+          if (!entry.isIntersecting) {
+            continue;
+          }
+
+          entry.target.dataset.shown = "";
           observer.unobserve(entry.target);
         }
       },
@@ -189,18 +246,23 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     );
 
     for (const element of below) {
-      element.setAttribute("data-waiting", "");
+      element.dataset.waiting = "";
       observer.observe(element);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, [stage, reduced]);
 
   useLayoutEffect(() => {
     const from = source.current;
     const target = fold.current?.querySelector(".panel-mid")?.getBoundingClientRect();
 
-    if (stage !== "unfold" || !from || !target || !fold.current || reduced) return;
+    if (stage !== "unfold" || !from || !target || !fold.current || reduced) {
+      return;
+    }
+
     const scaleX = from.width / target.width;
     const scaleY = from.height / target.height;
     const x = from.left + from.width / 2 - (target.left + target.width / 2);
@@ -208,7 +270,10 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
     const timing = { duration: 600, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
 
     fold.current.animate(
-      [{ transform: `translate(${x}px, ${y}px) rotate(-1deg) scale(${scaleX}, ${scaleY})` }, { transform: "none" }],
+      [
+        { transform: `translate(${x}px, ${y}px) rotate(-1deg) scale(${scaleX}, ${scaleY})` },
+        { transform: "none" },
+      ],
       timing,
     );
     fold.current
@@ -216,13 +281,16 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
       ?.animate([{ transform: `scaleY(${scaleX / scaleY})` }, { transform: "none" }], timing);
   }, [stage, reduced]);
 
-  function load() {
+  const load = async () => {
     loading.current ??= fetch(`/l/${token}/letter`, { method: "POST", cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then(
         (written: Words | null) => {
-          if (written) setWords(written);
-          else loading.current = null;
+          if (written) {
+            setWords(written);
+          } else {
+            loading.current = null;
+          }
 
           return written !== null;
         },
@@ -233,86 +301,124 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
         },
       );
 
-    return loading.current;
-  }
+    return await loading.current;
+  };
 
-  function withWords(action: () => void) {
-    if (words) return action();
+  const withWords = (action: () => void) => {
+    if (words) {
+      action();
+
+      return;
+    }
+
     void load().then((loaded) => loaded && action());
-  }
+  };
 
-  function change(update: () => void, crossfade = reduced) {
-    if (!crossfade || !("startViewTransition" in document)) return update();
-    document.startViewTransition(() => flushSync(update)).ready.catch(() => {});
-  }
+  const change = (update: () => void, crossfade = reduced) => {
+    if (!crossfade || !("startViewTransition" in document)) {
+      update();
 
-  function fillRing(full: boolean) {
+      return;
+    }
+
+    document
+      .startViewTransition(() => {
+        flushSync(update);
+      })
+      .ready.catch(() => {});
+  };
+
+  const fillRing = (full: boolean) => {
     const circle = ring.current;
 
-    if (!circle) return;
+    if (!circle) {
+      return;
+    }
+
     const left = Number.parseFloat(getComputedStyle(circle).strokeDashoffset) / ringLength;
 
     circle.style.transition = full
       ? `stroke-dashoffset ${Math.round(holdMs * left)}ms linear`
       : "stroke-dashoffset 200ms cubic-bezier(0.23, 1, 0.32, 1)";
     circle.style.strokeDashoffset = full ? "0" : String(ringLength);
-  }
+  };
 
-  function ringFilled(event: React.TransitionEvent<SVGCircleElement>) {
-    if (!holding || event.propertyName !== "stroke-dashoffset") return;
+  const ringFilled = (event: React.TransitionEvent<SVGCircleElement>) => {
+    if (!holding || event.propertyName !== "stroke-dashoffset") {
+      return;
+    }
 
-    if (Number.parseFloat(getComputedStyle(event.currentTarget).strokeDashoffset) < 1) crack();
-  }
+    if (Number.parseFloat(getComputedStyle(event.currentTarget).strokeDashoffset) < 1) {
+      crack();
+    }
+  };
 
-  function fitOpenEnvelope() {
+  const fitOpenEnvelope = () => {
     const room = stageArea.current?.clientHeight ?? 0;
     const width = stageArea.current?.querySelector(".ritual-envelope")?.clientWidth ?? 0;
     const openHeight = width * 1.088;
     const scale = openHeight > 0 ? Math.min(1, (room - 12) / openHeight) : 1;
 
     scene.current?.style.setProperty("--open-scale", String(scale));
-  }
+  };
 
-  function crack() {
+  const crack = () => {
     void load();
     fitOpenEnvelope();
     setHolding(false);
     setUnfoldLast(unfoldNext);
     tap(12);
-    change(() => setStage("open"));
-  }
+    change(() => {
+      setStage("open");
+    });
+  };
 
-  function press() {
-    if (stage !== "back" || holding) return;
+  const press = () => {
+    if (stage !== "back" || holding) {
+      return;
+    }
 
-    if (reduced) return crack();
+    if (reduced) {
+      crack();
+
+      return;
+    }
+
     void load();
     tap(6);
     setHolding(true);
     fillRing(true);
-  }
+  };
 
-  function release() {
-    if (!holding) return;
+  const release = () => {
+    if (!holding) {
+      return;
+    }
+
     setHolding(false);
     fillRing(false);
-  }
+  };
 
-  function unfold() {
-    if (stage !== "open") return;
+  const unfold = () => {
+    if (stage !== "open") {
+      return;
+    }
+
     withWords(() => {
       source.current = envelopeLetter.current?.getBoundingClientRect() ?? null;
-      change(() => setStage("unfold"));
+      change(() => {
+        setStage("unfold");
+      });
     });
-  }
+  };
 
-  function again() {
+  const again = () => {
     window.scrollTo({ top: 0 });
     change(() => {
       setStage("front");
       setRun((n) => n + 1);
     });
-  }
+  };
 
   const letter = words && { ...delivery.letter, ...words };
   const flipped = stage !== "front";
@@ -328,7 +434,11 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
           ? ["Keep holding…"]
           : [
               reduced ? "Tap the seal to break it" : "Press and hold the seal",
-              unfoldNext ? "then unfold your phone to read it" : reduced ? "" : "it breaks the way real wax does",
+              unfoldNext
+                ? "then unfold your phone to read it"
+                : reduced
+                  ? ""
+                  : "it breaks the way real wax does",
             ]
         : unfoldLast
           ? ["Now unfold your phone", "or tap the letter to read it here"]
@@ -363,12 +473,24 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
                     ? "Folded letter. Unfold it."
                     : "Envelope"
               }
-              onClick={() =>
-                stage === "front" ? change(() => setStage("back")) : stage === "open" ? unfold() : undefined
-              }
-              onKeyDown={activate(() =>
-                stage === "front" ? change(() => setStage("back")) : stage === "open" ? unfold() : undefined,
-              )}
+              onClick={() => {
+                stage === "front"
+                  ? change(() => {
+                      setStage("back");
+                    })
+                  : stage === "open"
+                    ? unfold()
+                    : undefined;
+              }}
+              onKeyDown={activate(() => {
+                stage === "front"
+                  ? change(() => {
+                      setStage("back");
+                    })
+                  : stage === "open"
+                    ? unfold()
+                    : undefined;
+              })}
             >
               <Envelope
                 theme={theme}
@@ -380,7 +502,9 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
                   <button
                     type="button"
                     className="seal-button"
-                    aria-label={reduced ? "Wax seal. Tap to open." : "Wax seal. Press and hold to open."}
+                    aria-label={
+                      reduced ? "Wax seal. Tap to open." : "Wax seal. Press and hold to open."
+                    }
                     disabled={stage !== "back"}
                     onPointerDown={(event) => {
                       event.currentTarget.setPointerCapture(event.pointerId);
@@ -388,7 +512,9 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
                     }}
                     onPointerUp={release}
                     onPointerCancel={release}
-                    onContextMenu={(event) => event.preventDefault()}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                    }}
                     onKeyDown={(event) => {
                       if ((event.key === "Enter" || event.key === " ") && !event.repeat) {
                         event.preventDefault();
@@ -427,7 +553,7 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
               />
             </div>
           </div>
-          <div className="ritual-hint" key={`hint-${hint.join()}`}>
+          <div className="ritual-hint" key={`hint-${hint.join(",")}`}>
             {hint[0] && (
               <div className="hint-main">
                 {unfoldLast && (
@@ -457,7 +583,9 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
                   </div>
                   {panel !== "mid" && (
                     <div className="face face-back">
-                      {panel === "top" && <div className="env-letter-note font-caveat">for {address.to}</div>}
+                      {panel === "top" && (
+                        <div className="env-letter-note font-caveat">for {address.to}</div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -490,12 +618,18 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
                     </div>
                     <h2 className="keep-title">Yours to keep.</h2>
                     <p className="keep-text">
-                      {address.from} sealed this letter for you on {delivery.sealedOn}. Only people with this link can
-                      open it.
+                      {address.from} sealed this letter for you on {delivery.sealedOn}. Only people
+                      with this link can open it.
                     </p>
                   </div>
                   <div className="keep-actions">
-                    <button type="button" className="keep-primary" onClick={() => window.print()}>
+                    <button
+                      type="button"
+                      className="keep-primary"
+                      onClick={() => {
+                        window.print();
+                      }}
+                    >
                       <svg viewBox="0 0 24 24" aria-hidden>
                         <path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" />
                       </svg>
@@ -533,4 +667,4 @@ export function Experience({ delivery, start = "front" }: { delivery: Delivery; 
       )}
     </main>
   );
-}
+};

@@ -1,52 +1,62 @@
 import type { ReactNode } from "react";
+
 import type { Theme } from "@/lib/theme";
+
 import { WaxSeal } from "./seal";
 import { Emboss, Sprig } from "./stationery";
 import { VoiceNote } from "./voice-note";
 
-export type Letter = {
+export interface Letter {
   body: string;
   from: string;
   date: string;
   signature?: string | null;
   voice?: { url: string; seconds: number } | null;
-};
+}
 
 export type Words = Pick<Letter, "body" | "signature" | "voice">;
 
-export function paragraphs(body: string) {
-  return body.split(/\n\s*\n/).filter((p) => p.trim() !== "");
-}
+export const paragraphs = (body: string) => body.split(/\n\s*\n/).filter((p) => p.trim() !== "");
 
-export function inline(text: string): ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/).map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**") && part.length > 4)
+export const inline = (text: string): ReactNode[] =>
+  text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/).map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
       return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
 
-    if (part.startsWith("*") && part.endsWith("*") && part.length > 2) return <em key={i}>{part.slice(1, -1)}</em>;
+    if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+      return <em key={i}>{part.slice(1, -1)}</em>;
+    }
 
     return part;
   });
-}
 
-function Letterhead({ theme, initial, seed }: { theme: Theme; initial: string; seed: number }) {
-  if (theme.letterhead === "airmail")
+const Letterhead = ({ theme, initial, seed }: { theme: Theme; initial: string; seed: number }) => {
+  if (theme.letterhead === "airmail") {
     return (
       <div className="airmail-label" aria-hidden>
         PAR AVION
       </div>
     );
+  }
 
-  if (theme.letterhead === "seal") return <WaxSeal theme={theme} initial={initial} seed={seed} className="head-seal" />;
+  if (theme.letterhead === "seal") {
+    return <WaxSeal theme={theme} initial={initial} seed={seed} className="head-seal" />;
+  }
 
   return <Emboss initial={initial} />;
-}
+};
 
-type SheetProps = { letter: Letter; initial: string; theme: Theme; seed?: number };
+interface SheetProps {
+  letter: Letter;
+  initial: string;
+  theme: Theme;
+  seed?: number;
+}
 
 const closingLength = 90;
 
-export function SheetContent({ letter, initial, theme, seed = 7 }: SheetProps) {
+export const SheetContent = ({ letter, initial, theme, seed = 7 }: SheetProps) => {
   const all = paragraphs(letter.body);
   const last = all.at(-1);
   const closing = last !== undefined && last.length <= closingLength ? last : null;
@@ -82,4 +92,4 @@ export function SheetContent({ letter, initial, theme, seed = 7 }: SheetProps) {
       </div>
     </div>
   );
-}
+};

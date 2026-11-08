@@ -80,7 +80,7 @@ export type StampKey = keyof typeof stamps;
 
 export type LinerKey = keyof typeof liners;
 
-export type Style = {
+export interface Style {
   paper: PaperKey;
   finish: FinishKey;
   ink: InkKey;
@@ -89,9 +89,9 @@ export type Style = {
   emblem: EmblemKey;
   stamp: StampKey;
   liner: LinerKey;
-};
+}
 
-type Base = {
+interface Base {
   name: string;
   mood: string;
   blurb: string;
@@ -112,7 +112,7 @@ type Base = {
   airmail: boolean;
   sprig: boolean;
   style: Style;
-};
+}
 
 const bases = {
   keepsake: {
@@ -244,7 +244,7 @@ const bases = {
 export type ThemeKey = keyof typeof bases;
 
 // SAFETY: Object.keys of a literal object returns exactly its keys
-export const themeKeys = Object.keys(bases) as ReadonlyArray<ThemeKey>;
+export const themeKeys = Object.keys(bases) as readonly ThemeKey[];
 
 export type Theme = Omit<Base, "style"> & {
   key: ThemeKey;
@@ -260,7 +260,7 @@ export type Theme = Omit<Base, "style"> & {
   stamp: { kind: StampKey; paper: string; art: string; caption: string };
 };
 
-function luminance(hex: string) {
+const luminance = (hex: string) => {
   const channel = (i: number) => {
     const c = Number.parseInt(hex.slice(i, i + 2), 16) / 255;
 
@@ -268,23 +268,20 @@ function luminance(hex: string) {
   };
 
   return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-}
+};
 
-export function contrast(a: string, b: string) {
+export const contrast = (a: string, b: string) => {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
 
   return (hi + 0.05) / (lo + 0.05);
-}
+};
 
-export function inkFits(ink: InkKey, paper: PaperKey) {
-  return contrast(inks[ink].color, papers[paper].color) >= 4.5;
-}
+export const inkFits = (ink: InkKey, paper: PaperKey) =>
+  contrast(inks[ink].color, papers[paper].color) >= 4.5;
 
-export function defaultStyle(key: ThemeKey): Style {
-  return { ...bases[key].style };
-}
+export const defaultStyle = (key: ThemeKey): Style => ({ ...bases[key].style });
 
-export function resolveTheme(key: ThemeKey, style: Partial<Style> = {}): Theme {
+export const resolveTheme = (key: ThemeKey, style: Partial<Style> = {}): Theme => {
   const base = bases[key];
   const chosen: Style = { ...base.style, ...style };
 
@@ -316,7 +313,7 @@ export function resolveTheme(key: ThemeKey, style: Partial<Style> = {}): Theme {
     liner: chosen.wax === base.style.wax ? base.liner : wax.wax,
     stamp: { kind: chosen.stamp, paper: stamp.paper, art: stamp.art, caption: stamp.caption },
   };
-}
+};
 
 export const keepsake = resolveTheme("keepsake");
 

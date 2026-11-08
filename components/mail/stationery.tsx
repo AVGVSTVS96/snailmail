@@ -1,21 +1,26 @@
 import type { StampKey, Theme } from "@/lib/theme";
+
 import { Emblem } from "./seal";
 
 const stampW = 60;
 const stampH = 72;
 
-function perforations() {
+const perforations = () => {
   const r = 2;
   const across = Math.floor(stampW / 7.68);
   const down = Math.floor(stampH / 7.68);
-  const holes: Array<readonly [number, number]> = [];
+  const holes: (readonly [number, number])[] = [];
 
-  for (let i = 0; i <= across; i++) holes.push([(i * stampW) / across, 0], [(i * stampW) / across, stampH]);
+  for (let i = 0; i <= across; i++) {
+    holes.push([(i * stampW) / across, 0], [(i * stampW) / across, stampH]);
+  }
 
-  for (let i = 0; i <= down; i++) holes.push([0, (i * stampH) / down], [stampW, (i * stampH) / down]);
+  for (let i = 0; i <= down; i++) {
+    holes.push([0, (i * stampH) / down], [stampW, (i * stampH) / down]);
+  }
 
   return holes.map(([x, y], i) => <circle key={i} cx={x.toFixed(1)} cy={y.toFixed(1)} r={r} />);
-}
+};
 
 const moonStars = [
   [-14, -14, 0.9],
@@ -25,15 +30,16 @@ const moonStars = [
   [6, 14, 0.6],
 ] as const;
 
-function StampArt({ kind, art }: { kind: StampKey; art: string }) {
-  if (kind === "swallow")
+const StampArt = ({ kind, art }: { kind: StampKey; art: string }) => {
+  if (kind === "swallow") {
     return (
       <g transform={`translate(${stampW / 2},${stampH / 2})`} fill={art}>
         <path d="M-17,-6 C-8,-4 -3,0 0,3 C4,-2 10,-6 19,-9 C13,-3 8,2 4,6 C8,7 12,11 14,16 C8,12 3,10 -1,9 C-6,9 -10,6 -12,2 C-14,-1 -16,-3 -17,-6 Z" />
       </g>
     );
+  }
 
-  if (kind === "poppy")
+  if (kind === "poppy") {
     return (
       <g transform={`translate(${stampW / 2},${stampH / 2 + 4})`}>
         <path d="M0,16 C0,8 1,2 0,-4" stroke="#5C6B4A" strokeWidth="1.4" fill="none" />
@@ -46,8 +52,9 @@ function StampArt({ kind, art }: { kind: StampKey; art: string }) {
         <circle cx="0" cy="-9" r="2.4" fill="#2E2622" />
       </g>
     );
+  }
 
-  if (kind === "moon")
+  if (kind === "moon") {
     return (
       <g transform={`translate(${stampW / 2},${stampH / 2})`} fill={art}>
         {moonStars.map(([x, y, r]) => (
@@ -58,22 +65,30 @@ function StampArt({ kind, art }: { kind: StampKey; art: string }) {
         </g>
       </g>
     );
+  }
 
-  if (kind === "heart")
+  if (kind === "heart") {
     return (
       <g transform={`translate(${stampW / 2},${stampH / 2 + 1}) scale(1.6)`} fill={art}>
         <Emblem kind="heart" />
       </g>
     );
+  }
 
-  if (kind === "bridge")
+  if (kind === "bridge") {
     return (
-      <g transform={`translate(${stampW / 2},${stampH / 2 + 6})`} stroke={art} strokeWidth="1.4" fill="none">
+      <g
+        transform={`translate(${stampW / 2},${stampH / 2 + 6})`}
+        stroke={art}
+        strokeWidth="1.4"
+        fill="none"
+      >
         <path d="M-20,4 L20,4" />
         <path d="M-9,4 L-9,-18 M-5,4 L-5,-18 M5,4 L5,-18 M9,4 L9,-18" />
         <path d="M-20,-2 C-14,-4 -10,-12 -7,-16 C-2,-6 2,-6 7,-16 C10,-12 14,-4 20,-2" />
       </g>
     );
+  }
 
   return (
     <g
@@ -88,9 +103,9 @@ function StampArt({ kind, art }: { kind: StampKey; art: string }) {
       <path d="M14,10 L17,-1 M17,-1 L15,-5 M17,-1 L20,-4" />
     </g>
   );
-}
+};
 
-export function Stamp({ theme }: { theme: Theme }) {
+export const Stamp = ({ theme }: { theme: Theme }) => {
   const { kind, paper, art, caption } = theme.stamp;
 
   return (
@@ -115,9 +130,19 @@ export function Stamp({ theme }: { theme: Theme }) {
       <g fill={theme.envelope}>{perforations()}</g>
     </g>
   );
-}
+};
 
-export function Postmark({ ink, city, date, year }: { ink: string; city: string; date: string; year: string }) {
+export const Postmark = ({
+  ink,
+  city,
+  date,
+  year,
+}: {
+  ink: string;
+  city: string;
+  date: string;
+  year: string;
+}) => {
   const waves = [14, 24, 34, 44, 54].map((y) => (
     <path
       key={y}
@@ -145,15 +170,13 @@ export function Postmark({ ink, city, date, year }: { ink: string; city: string;
       </g>
     </g>
   );
-}
+};
 
-export function Emboss({ initial }: { initial: string }) {
-  return (
-    <div className="emboss" aria-hidden>
-      {initial}
-    </div>
-  );
-}
+export const Emboss = ({ initial }: { initial: string }) => (
+  <div className="emboss" aria-hidden>
+    {initial}
+  </div>
+);
 
 const sprigLeaves = [
   [92, -1],
@@ -163,15 +186,27 @@ const sprigLeaves = [
   [38, -1],
 ] as const;
 
-export function SprigArt() {
+export const SprigArt = () => {
   const stem = "#5C6B4A";
   const petal = "#C4918A";
   const center = "#C9A24A";
 
   return (
     <g>
-      <path d="M38,118 C40,96 42,70 50,24" stroke={stem} strokeWidth="1.6" fill="none" strokeLinecap="round" />
-      <path d="M44,60 C52,52 58,50 66,50" stroke={stem} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      <path
+        d="M38,118 C40,96 42,70 50,24"
+        stroke={stem}
+        strokeWidth="1.6"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M44,60 C52,52 58,50 66,50"
+        stroke={stem}
+        strokeWidth="1.2"
+        fill="none"
+        strokeLinecap="round"
+      />
       {sprigLeaves.map(([y, side], i) => {
         const x = 40 + (100 - y) * 0.12 + side * 9;
 
@@ -190,24 +225,40 @@ export function SprigArt() {
       })}
       <g transform="translate(51,20)">
         {[0, 72, 144, 216, 288].map((a) => (
-          <ellipse key={a} cx="0" cy="-7" rx="4.6" ry="7" transform={`rotate(${a})`} fill={petal} opacity="0.92" />
+          <ellipse
+            key={a}
+            cx="0"
+            cy="-7"
+            rx="4.6"
+            ry="7"
+            transform={`rotate(${a})`}
+            fill={petal}
+            opacity="0.92"
+          />
         ))}
         <circle r="3.4" fill={center} />
       </g>
       <g transform="translate(68,48)">
         {[36, 108, 180, 252, 324].map((a) => (
-          <ellipse key={a} cx="0" cy="-4.5" rx="3" ry="4.6" transform={`rotate(${a})`} fill={petal} opacity="0.75" />
+          <ellipse
+            key={a}
+            cx="0"
+            cy="-4.5"
+            rx="3"
+            ry="4.6"
+            transform={`rotate(${a})`}
+            fill={petal}
+            opacity="0.75"
+          />
         ))}
         <circle r="2.2" fill={center} />
       </g>
     </g>
   );
-}
+};
 
-export function Sprig({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 90 120" className={className} aria-hidden>
-      <SprigArt />
-    </svg>
-  );
-}
+export const Sprig = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 90 120" className={className} aria-hidden>
+    <SprigArt />
+  </svg>
+);

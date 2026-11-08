@@ -1,27 +1,34 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+
 import { Envelope } from "@/components/mail/envelope";
 import { getLetter, toDelivery } from "@/lib/letters";
 import { deskProps } from "@/lib/texture";
+
 import "./film.css";
 
-export const metadata: Metadata = { robots: { index: false, follow: false, noarchive: true, noimageindex: true } };
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, noarchive: true, noimageindex: true },
+};
 
-export default function FilmPage({ params }: PageProps<"/l/[token]/film">) {
-  return (
-    <Suspense>
-      {params.then(({ token }) => (
-        <Film token={token} />
-      ))}
-    </Suspense>
-  );
-}
+const FilmPage = ({ params }: PageProps<"/l/[token]/film">) => (
+  <Suspense>
+    {params.then(({ token }) => (
+      <Film token={token} />
+    ))}
+  </Suspense>
+);
 
-async function Film({ token }: { token: string }) {
+export default FilmPage;
+
+const Film = async ({ token }: { token: string }) => {
   const letter = await getLetter(token);
 
-  if (!letter) notFound();
+  if (!letter) {
+    notFound();
+  }
+
   const { theme, address, seed, initial } = toDelivery(letter);
 
   return (
@@ -35,7 +42,15 @@ async function Film({ token }: { token: string }) {
             initial={initial}
             seal={
               <svg viewBox="0 0 112 112" className="film-ring" aria-hidden>
-                <circle cx="56" cy="56" r="46" fill="none" stroke={theme.ink} strokeOpacity="0.28" strokeWidth="1.5" />
+                <circle
+                  cx="56"
+                  cy="56"
+                  r="46"
+                  fill="none"
+                  stroke={theme.ink}
+                  strokeOpacity="0.28"
+                  strokeWidth="1.5"
+                />
                 <circle
                   className="film-ring-fill"
                   cx="56"
@@ -57,4 +72,4 @@ async function Film({ token }: { token: string }) {
       <div className="film-mark">snailmail</div>
     </main>
   );
-}
+};

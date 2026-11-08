@@ -1,28 +1,51 @@
 import { defineConfig } from "oxlint";
+import antiSlop from "ultracite/oxlint/anti-slop";
+import core from "ultracite/oxlint/core";
+import next from "ultracite/oxlint/next";
+import react from "ultracite/oxlint/react";
+
+const effects = {
+  importNames: ["useEffect", "useLayoutEffect", "useInsertionEffect"],
+  message: "Derive in render, act in the event handler, or subscribe with useSyncExternalStore.",
+  name: "react",
+};
 
 export default defineConfig({
-  ignorePatterns: [".agents/**", ".claude/**", "convex/_generated/**", "tools/oxlint/anti-slop/**"],
-  plugins: ["typescript", "react", "nextjs", "oxc"],
-  jsPlugins: [{ name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" }],
+  extends: [core, react, next, antiSlop],
+  ignorePatterns: [
+    ...(core.ignorePatterns ?? []),
+    ".agents/**",
+    ".claude/**",
+    "convex/_generated/**",
+    "next-env.d.ts",
+  ],
+  jsPlugins: [{ name: "no-comments", specifier: "./tools/oxlint/no-comments.ts" }],
+  options: { reportUnusedDisableDirectives: "error", typeAware: true },
+  overrides: [
+    {
+      files: ["lib/**"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            paths: [effects],
+            patterns: [
+              {
+                group: ["@/components/*", "@/app/*"],
+                message:
+                  "lib/ owns the domain; components and app import from it, never the reverse.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
   rules: {
+    "eslint/sort-keys": "off",
+    "import/no-cycle": "error",
+    "no-comments/no-comments": "error",
+    "no-restricted-imports": ["error", { paths: [effects] }],
     "oxc/no-accumulating-spread": "error",
-    "anti-slop/no-array-filter-map": "error",
-    "anti-slop/no-reduce-accumulator-copy": "error",
-    "anti-slop/no-chained-type-assertions": "error",
-    "anti-slop/no-conditional-empty-object-spread": "error",
-    "anti-slop/no-known-value-widening": "error",
-    "anti-slop/no-module-mocking": "error",
-    "anti-slop/no-object-parameters": "error",
-    "anti-slop/no-reflect-apply": "error",
-    "anti-slop/no-reflect-get": "error",
-    "anti-slop/no-runtime-typeof": "error",
-    "anti-slop/no-shape-in-symbol-names": "error",
-    "anti-slop/no-unknown-parameters": "error",
-    "anti-slop/no-unknown-returns": "error",
-    "anti-slop/no-unknown-type-aliases": "error",
-    "anti-slop/no-unsafe-dictionary-type": "error",
-    "anti-slop/no-widen-then-assert": "error",
-    "anti-slop/require-readable-spacing": "error",
-    "anti-slop/require-safety-comment-for-type-assertion": "error",
   },
 });

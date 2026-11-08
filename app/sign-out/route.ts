@@ -1,5 +1,5 @@
 import { signOut } from "@workos-inc/authkit-nextjs";
 
-export async function POST() {
+export const POST = async () => {
   await signOut();
-}
+};

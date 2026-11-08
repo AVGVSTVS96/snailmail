@@ -2,16 +2,18 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
+
 import { SealedEnvelope } from "@/components/mail/sealed";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { letterLink } from "@/lib/links";
-import type { Theme } from "@/lib/theme";
 import { themeStyle } from "@/lib/texture";
+import type { Theme } from "@/lib/theme";
+
 import { CopyButton } from "./copy";
 import { useHosts } from "./providers";
 
-type Props = {
+interface Props {
   id: Id<"letters">;
   token: string;
   to: string;
@@ -25,11 +27,11 @@ type Props = {
   previewReady: boolean;
   notify: boolean;
   onClose: () => void;
-};
+}
 
 const previewWait = 90_000;
 
-export function PublishDialog({
+export const PublishDialog = ({
   id,
   token,
   to,
@@ -43,7 +45,7 @@ export function PublishDialog({
   previewReady,
   notify,
   onClose,
-}: Props) {
+}: Props) => {
   const publish = useMutation(api.writer.publish);
   const save = useMutation(api.writer.save);
   const unpublish = useMutation(api.writer.unpublish);
@@ -62,30 +64,44 @@ export function PublishDialog({
   const [waitedOut, setWaitedOut] = useState(false);
 
   useEffect(() => {
-    if (previewReady) return;
-    const timer = setTimeout(() => setWaitedOut(true), previewWait);
+    if (previewReady) {
+      return;
+    }
 
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => {
+      setWaitedOut(true);
+    }, previewWait);
+
+    return () => {
+      clearTimeout(timer);
+    };
   }, [previewReady]);
 
   const holding = !previewReady && !waitedOut;
 
-  async function seal(slug: string, keep: boolean, exact: boolean) {
+  const seal = async (slug: string, keep: boolean, exact: boolean) => {
     try {
       setLink(await publish({ id, slug, private: keep, exact }));
       setProblem("");
       setEditing(false);
     } catch (error) {
-      setProblem(error instanceof Error ? error.message.replace(/^.*ConvexError: /, "").replace(/\s+at .*$/s, "") : "");
+      setProblem(
+        error instanceof Error
+          ? error.message.replace(/^.*ConvexError: /, "").replace(/\s+at .*$/s, "")
+          : "",
+      );
     }
-  }
+  };
 
   const sealOnOpen = useRef(!wasPublished);
 
   useEffect(() => {
     dialog.current?.showModal();
 
-    if (!sealOnOpen.current) return;
+    if (!sealOnOpen.current) {
+      return;
+    }
+
     sealOnOpen.current = false;
     void seal(to, true, false);
     // oxlint-disable-next-line react-hooks/exhaustive-deps
@@ -134,7 +150,12 @@ export function PublishDialog({
                   shown
                 )}
               </span>
-              <CopyButton text={url} className="w-button w-primary w-copy" label="Copy link" disabled={holding} />
+              <CopyButton
+                text={url}
+                className="w-button w-primary w-copy"
+                label="Copy link"
+                disabled={holding}
+              />
             </div>
             {hosts.root && (
               <div className="w-avail">
@@ -146,9 +167,19 @@ export function PublishDialog({
                       void seal(name, privateLink, true);
                     }}
                   >
-                    <input value={name} onChange={(event) => setName(event.target.value)} aria-label="Subdomain name" />
+                    <input
+                      value={name}
+                      onChange={(event) => {
+                        setName(event.target.value);
+                      }}
+                      aria-label="Subdomain name"
+                    />
                     <span className="w-soft">.{hosts.root}</span>
-                    <button type="submit" className="w-button w-small" disabled={check?.free === false}>
+                    <button
+                      type="submit"
+                      className="w-button w-small"
+                      disabled={check?.free === false}
+                    >
                       Save
                     </button>
                     {check && (
@@ -161,7 +192,13 @@ export function PublishDialog({
                   host && (
                     <span className="w-ok">
                       ✓ {host} is yours ·{" "}
-                      <button type="button" className="w-text-button" onClick={() => setEditing(true)}>
+                      <button
+                        type="button"
+                        className="w-text-button"
+                        onClick={() => {
+                          setEditing(true);
+                        }}
+                      >
                         change
                       </button>
                     </span>
@@ -217,16 +254,22 @@ export function PublishDialog({
               type="button"
               className="w-button"
               disabled={holding}
-              onClick={() => void navigator.share({ title: `A letter for ${to}`, url }).catch(() => undefined)}
+              onClick={() =>
+                void navigator.share({ title: `A letter for ${to}`, url }).catch(() => {})
+              }
             >
               Share…
             </button>
           )}
-          <button type="button" className="w-button w-primary" onClick={() => dialog.current?.close()}>
+          <button
+            type="button"
+            className="w-button w-primary"
+            onClick={() => dialog.current?.close()}
+          >
             Done
           </button>
         </div>
       </div>
     </dialog>
   );
-}
+};

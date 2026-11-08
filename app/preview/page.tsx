@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+
 import { Preview } from "@/components/writer/preview";
 
-export const metadata: Metadata = { title: "Preview · snailmail", robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  title: "Preview · snailmail",
+  robots: { index: false, follow: false },
+};
 
-export default function PreviewPage() {
-  return <Preview />;
-}
+const PreviewPage = () => <Preview />;
+
+export default PreviewPage;

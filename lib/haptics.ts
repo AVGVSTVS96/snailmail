@@ -1,4 +1,4 @@
-export function tap(milliseconds: number) {
+export const tap = (milliseconds: number) => {
   if ("vibrate" in navigator) {
     navigator.vibrate(milliseconds);
 
@@ -16,4 +16,4 @@ export function tap(milliseconds: number) {
   document.body.append(label);
   label.click();
   label.remove();
-}
+};

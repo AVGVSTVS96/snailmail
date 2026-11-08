@@ -36,4 +36,7 @@ export const scrapers = [
   "Scrapy",
 ];
 
-export const scraperAgent = new RegExp(scrapers.map((name) => name.replaceAll("-", "\\-")).join("|"), "i");
+export const scraperAgent = new RegExp(
+  scrapers.map((name) => name.replaceAll("-", "\\-")).join("|"),
+  "i",
+);

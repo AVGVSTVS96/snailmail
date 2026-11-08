@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function CopyButton({
+export const CopyButton = ({
   text,
   label = "Copy link",
   className,
@@ -12,7 +12,7 @@ export function CopyButton({
   label?: string;
   className?: string;
   disabled?: boolean;
-}) {
+}) => {
   const [copied, setCopied] = useState(false);
 
   return (
@@ -26,7 +26,9 @@ export function CopyButton({
         event.stopPropagation();
         void navigator.clipboard.writeText(text).then(() => {
           setCopied(true);
-          setTimeout(() => setCopied(false), 1400);
+          setTimeout(() => {
+            setCopied(false);
+          }, 1400);
         });
       }}
     >
@@ -42,4 +44,4 @@ export function CopyButton({
       )}
     </button>
   );
-}
+};

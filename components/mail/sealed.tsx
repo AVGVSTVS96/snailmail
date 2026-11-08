@@ -1,12 +1,13 @@
-import type { Theme } from "@/lib/theme";
 import { themeStyle } from "@/lib/texture";
+import type { Theme } from "@/lib/theme";
+
 import { WaxSeal } from "./seal";
 
 const W = 346;
 const H = 235;
 const flap = 141;
 
-export function SealedEnvelope({
+export const SealedEnvelope = ({
   theme,
   from,
   initial,
@@ -18,13 +19,21 @@ export function SealedEnvelope({
   initial: string;
   seed: number;
   className?: string;
-}) {
+}) => {
   const edge = `M0,0 L${W / 2 - 14},${flap - 8} Q${W / 2},${flap + 2} ${W / 2 + 14},${flap - 8} L${W},0`;
 
   return (
-    <div className={`sealed ${className ?? ""}`} style={themeStyle(theme)} data-light={theme.darkDesk ? undefined : ""}>
+    <div
+      className={`sealed ${className ?? ""}`}
+      style={themeStyle(theme)}
+      data-light={theme.darkDesk ? undefined : ""}
+    >
       <svg viewBox={`0 0 ${W} ${H}`} aria-hidden>
-        <path d={`M0,${H} L${W / 2},${H * 0.46} L${W},${H}`} fill="none" stroke="rgba(0,0,0,0.10)" />
+        <path
+          d={`M0,${H} L${W / 2},${H * 0.46} L${W},${H}`}
+          fill="none"
+          stroke="rgba(0,0,0,0.10)"
+        />
         <path
           d={`M0,${H} L${W * 0.42},${H * 0.52} L${W / 2},${H * 0.46} L${W * 0.58},${H * 0.52} L${W},${H} Z`}
           fill="rgba(0,0,0,0.035)"
@@ -49,4 +58,4 @@ export function SealedEnvelope({
       <WaxSeal theme={theme} initial={initial} seed={seed} className="sealed-seal" />
     </div>
   );
-}
+};

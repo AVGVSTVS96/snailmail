@@ -2,27 +2,31 @@
 
 import { useMutation } from "convex/react";
 import { useRef, useState } from "react";
+
 import { duration } from "@/components/mail/voice-note";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 const maxSeconds = 180;
 
-function length(file: Blob) {
-  return new Promise<number>((resolve) => {
+const length = async (file: Blob) =>
+  await new Promise<number>((resolve) => {
     const audio = new Audio(URL.createObjectURL(file));
-    audio.onloadedmetadata = () => resolve(Number.isFinite(audio.duration) ? audio.duration : 0);
-    audio.onerror = () => resolve(0);
+    audio.onloadedmetadata = () => {
+      resolve(Number.isFinite(audio.duration) ? audio.duration : 0);
+    };
+    audio.onerror = () => {
+      resolve(0);
+    };
   });
-}
 
-export function VoiceRecorder({
+export const VoiceRecorder = ({
   id,
   voice,
 }: {
   id: Id<"letters">;
   voice: { url: string | null; seconds: number } | null;
-}) {
+}) => {
   const uploadUrl = useMutation(api.writer.voiceUploadUrl);
   const setVoice = useMutation(api.writer.setVoice);
   const [state, setState] = useState<"idle" | "recording" | "saving">("idle");
@@ -31,12 +35,18 @@ export function VoiceRecorder({
   const recorder = useRef<MediaRecorder | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  async function store(file: Blob, length: number) {
+  const store = async (file: Blob, length: number) => {
     setState("saving");
 
     try {
       const url = await uploadUrl({ id });
-      const response = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
       const { storageId } = await response.json();
       await setVoice({ id, file: storageId, seconds: length });
       setProblem("");
@@ -45,22 +55,34 @@ export function VoiceRecorder({
     }
 
     setState("idle");
-  }
+  };
 
-  async function record() {
+  const record = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const type = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].find((t) => MediaRecorder.isTypeSupported(t));
+
+      const type = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].find((t) =>
+        MediaRecorder.isTypeSupported(t),
+      );
+
       const media = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
       const chunks: Blob[] = [];
       const started = performance.now();
       media.ondataavailable = (event) => chunks.push(event.data);
 
       media.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
+        stream.getTracks().forEach((track) => {
+          track.stop();
+        });
 
-        if (timer.current) clearInterval(timer.current);
-        void store(new Blob(chunks, { type: media.mimeType.split(";")[0] }), (performance.now() - started) / 1000);
+        if (timer.current) {
+          clearInterval(timer.current);
+        }
+
+        void store(
+          new Blob(chunks, { type: media.mimeType.split(";")[0] }),
+          (performance.now() - started) / 1000,
+        );
       };
 
       recorder.current = media;
@@ -72,14 +94,16 @@ export function VoiceRecorder({
         const elapsed = (performance.now() - started) / 1000;
         setSeconds(elapsed);
 
-        if (elapsed >= maxSeconds) media.stop();
+        if (elapsed >= maxSeconds) {
+          media.stop();
+        }
       }, 250);
     } catch {
       setProblem("The microphone isn't available. You can upload a recording instead.");
     }
-  }
+  };
 
-  if (state === "recording")
+  if (state === "recording") {
     return (
       <div className="w-extra w-extra-on">
         <span className="w-rec-dot w-rec-live" />
@@ -92,8 +116,9 @@ export function VoiceRecorder({
         </button>
       </div>
     );
+  }
 
-  if (voice)
+  if (voice) {
     return (
       <div className="w-extra w-extra-on">
         <span className="w-rec-dot" />
@@ -101,19 +126,31 @@ export function VoiceRecorder({
           <div className="w-strong">Voice note · {duration(voice.seconds)}</div>
           <div className="w-soft">Plays from the letter</div>
         </div>
-        <button type="button" className="w-text-button" onClick={() => void setVoice({ id, file: null, seconds: 0 })}>
+        <button
+          type="button"
+          className="w-text-button"
+          onClick={() => void setVoice({ id, file: null, seconds: 0 })}
+        >
           Remove
         </button>
       </div>
     );
+  }
 
   return (
     <div>
       <div className="w-extra">
-        <button type="button" className="w-extra-main" onClick={record} disabled={state === "saving"}>
+        <button
+          type="button"
+          className="w-extra-main"
+          onClick={record}
+          disabled={state === "saving"}
+        >
           <span className="w-rec-dot" />
           <span>
-            <span className="w-strong">{state === "saving" ? "Saving…" : "Record a voice note"}</span>
+            <span className="w-strong">
+              {state === "saving" ? "Saving…" : "Record a voice note"}
+            </span>
             <span className="w-soft">Up to 3 minutes, plays from the letter</span>
           </span>
         </button>
@@ -126,10 +163,18 @@ export function VoiceRecorder({
             onChange={async (event) => {
               const file = event.target.files?.[0];
 
-              if (!file) return;
+              if (!file) {
+                return;
+              }
+
               const seconds = await length(file);
 
-              if (seconds > maxSeconds + 1) return setProblem("Voice notes can be up to 3 minutes.");
+              if (seconds > maxSeconds + 1) {
+                setProblem("Voice notes can be up to 3 minutes.");
+
+                return;
+              }
+
               await store(file, seconds);
             }}
           />
@@ -138,4 +183,4 @@ export function VoiceRecorder({
       {problem && <p className="w-problem">{problem}</p>}
     </div>
   );
-}
+};

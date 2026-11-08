@@ -1,32 +1,33 @@
 import { v } from "convex/values";
+
 import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
-import { internalMutation, type MutationCtx, mutation, type QueryCtx } from "./_generated/server";
+import { internalMutation, mutation } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { themes } from "./schema";
 import { authorize } from "./secret";
 
 const missWindow = 60 * 60 * 1000;
 const missesAllowed = 20;
 
-export function newToken() {
+export const newToken = () => {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
 
   return btoa(String.fromCharCode(...bytes))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
     .replaceAll("=", "");
-}
+};
 
-function sent(letter: Doc<"letters"> | null) {
-  return letter && letter.status !== "draft" ? letter : null;
-}
+const sent = (letter: Doc<"letters"> | null) =>
+  letter && letter.status !== "draft" ? letter : null;
 
-async function guarded(
+const guarded = async (
   ctx: MutationCtx,
   secret: string,
   visitor: string,
   lookup: () => Promise<Doc<"letters"> | null>,
-) {
+) => {
   authorize(secret);
 
   const misses = await ctx.db
@@ -37,46 +38,49 @@ async function guarded(
   const now = Date.now();
   const recent = misses && now - misses.since < missWindow ? misses.count : 0;
 
-  if (recent >= missesAllowed) return "limited";
+  if (recent >= missesAllowed) {
+    return "limited";
+  }
 
   const letter = sent(await lookup());
 
-  if (letter) return letter;
+  if (letter) {
+    return letter;
+  }
 
-  if (!misses) await ctx.db.insert("misses", { visitor, count: 1, since: now });
-  else await ctx.db.patch(misses._id, recent ? { count: recent + 1 } : { count: 1, since: now });
+  if (misses) {
+    await ctx.db.patch(misses._id, recent ? { count: recent + 1 } : { count: 1, since: now });
+  } else {
+    await ctx.db.insert("misses", { visitor, count: 1, since: now });
+  }
 
   return null;
-}
+};
 
-function byToken(ctx: QueryCtx, token: string) {
-  return ctx.db
+const byToken = async (ctx: QueryCtx, token: string) =>
+  await ctx.db
     .query("letters")
     .withIndex("by_token", (q) => q.eq("token", token))
     .unique();
-}
 
-function find(ctx: MutationCtx, secret: string, token: string, visitor: string) {
-  return guarded(ctx, secret, visitor, () => byToken(ctx, token));
-}
+const find = async (ctx: MutationCtx, secret: string, token: string, visitor: string) =>
+  await guarded(ctx, secret, visitor, async () => await byToken(ctx, token));
 
-function outside(letter: Doc<"letters">) {
-  return {
-    token: letter.token,
-    theme: letter.theme,
-    style: letter.style ?? null,
-    to: letter.to,
-    toPlace: letter.toPlace,
-    from: letter.from,
-    initial: letter.initial ?? null,
-    city: letter.city,
-    openWhen: letter.openWhen ?? null,
-    sealedAt: letter.sealedAt,
-    image: letter.image ?? null,
-    video: letter.video ?? null,
-    timeZone: letter.timeZone,
-  };
-}
+const outside = (letter: Doc<"letters">) => ({
+  token: letter.token,
+  theme: letter.theme,
+  style: letter.style ?? null,
+  to: letter.to,
+  toPlace: letter.toPlace,
+  from: letter.from,
+  initial: letter.initial ?? null,
+  city: letter.city,
+  openWhen: letter.openWhen ?? null,
+  sealedAt: letter.sealedAt,
+  image: letter.image ?? null,
+  video: letter.video ?? null,
+  timeZone: letter.timeZone,
+});
 
 const door = { secret: v.string(), token: v.string(), visitor: v.string() };
 
@@ -85,7 +89,9 @@ export const envelope = mutation({
   handler: async (ctx, { secret, token, visitor }) => {
     const letter = await find(ctx, secret, token, visitor);
 
-    if (letter === null || letter === "limited") return letter;
+    if (letter === null || letter === "limited") {
+      return letter;
+    }
 
     return outside(letter);
   },
@@ -103,30 +109,38 @@ export const envelopeAt = mutation({
       return named && (named.key ?? "") === key ? named : null;
     });
 
-    if (letter === null || letter === "limited") return letter;
+    if (letter === null || letter === "limited") {
+      return letter;
+    }
 
     return outside(letter);
   },
 });
 
-async function countOpen(ctx: MutationCtx, letter: Doc<"letters">) {
+const countOpen = async (ctx: MutationCtx, letter: Doc<"letters">) => {
   const opens = letter.opens ?? 0;
 
   await ctx.db.patch(letter._id, { opens: opens + 1, openedAt: Date.now() });
 
-  if (opens === 0 && letter.owner !== undefined && letter.notify !== false)
+  if (opens === 0 && letter.owner !== undefined && letter.notify !== false) {
     await ctx.scheduler.runAfter(0, internal.notify.opened, { id: letter._id });
-}
+  }
+};
 
 export const read = mutation({
   args: { ...door, reader: v.optional(v.string()) },
   handler: async (ctx, { secret, token, visitor, reader }) => {
     const letter = await find(ctx, secret, token, visitor);
 
-    if (letter === null || letter === "limited") return letter;
+    if (letter === null || letter === "limited") {
+      return letter;
+    }
+
     const voiceUrl = letter.voice ? await ctx.storage.getUrl(letter.voice.file) : null;
 
-    if (reader === undefined || reader !== letter.owner) await countOpen(ctx, letter);
+    if (reader === undefined || reader !== letter.owner) {
+      await countOpen(ctx, letter);
+    }
 
     return {
       body: letter.body,
@@ -141,7 +155,10 @@ export const preview = mutation({
   handler: async (ctx, { secret, token, visitor, kind }) => {
     const letter = await find(ctx, secret, token, visitor);
 
-    if (letter === null || letter === "limited") return letter;
+    if (letter === null || letter === "limited") {
+      return letter;
+    }
+
     const id = letter[kind];
     const url = id ? await ctx.storage.getUrl(id) : null;
 
@@ -174,7 +191,10 @@ export const resetOpens = internalMutation({
   handler: async (ctx, { token }) => {
     const letter = await byToken(ctx, token);
 
-    if (!letter) throw new Error("No letter with that token");
+    if (!letter) {
+      throw new Error("No letter with that token");
+    }
+
     await ctx.db.patch(letter._id, { opens: 0, openedAt: undefined });
   },
 });

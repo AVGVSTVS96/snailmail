@@ -122,7 +122,8 @@ html:has(.desk[data-theme="midnight"]) {
 
 .desk[data-finish="ruled"] :is(.sheet-body, .sheet-close .sheet-p) {
   --rule: rgba(30, 47, 82, 0.12);
-  background: linear-gradient(transparent calc(var(--letter-lh) - 1px), var(--rule) 0) 0 0 / 100% var(--letter-lh);
+  background: linear-gradient(transparent calc(var(--letter-lh) - 1px), var(--rule) 0) 0 0 / 100%
+    var(--letter-lh);
 }
 .desk[data-paper-dark][data-finish="ruled"] :is(.sheet-body, .sheet-close .sheet-p) {
   --rule: rgba(255, 255, 255, 0.08);
@@ -147,7 +148,8 @@ html:has(.desk[data-theme="midnight"]) {
     var(--deckle-right) 100% calc(-1 * var(--panel)) / 5px 240px repeat-y;
   --deckle-foot:
     linear-gradient(#000 0 0) 50% 0 / calc(100% - 8px) calc(100% - 4px) no-repeat,
-    var(--deckle-bottom) 0 100% / 240px 5px repeat-x, var(--deckle-left) 0 calc(-2 * var(--panel)) / 5px 240px repeat-y,
+    var(--deckle-bottom) 0 100% / 240px 5px repeat-x,
+    var(--deckle-left) 0 calc(-2 * var(--panel)) / 5px 240px repeat-y,
     var(--deckle-right) 100% calc(-2 * var(--panel)) / 5px 240px repeat-y;
   --deckle-packet:
     linear-gradient(#000 0 0) 50% 0 / calc(100% - 8px) calc(100% - 4px) no-repeat,

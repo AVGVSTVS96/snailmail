@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
+
 import { Experience } from "@/components/mail/experience";
-import { type OpenedLetter, toDelivery } from "@/lib/letters";
+import { toDelivery } from "@/lib/letters";
+import type { OpenedLetter } from "@/lib/letters";
 import { absolute } from "@/lib/site";
 import { resolveTheme } from "@/lib/theme";
 
@@ -16,8 +18,11 @@ const unindexed = {
   nocache: true,
 };
 
-export function letterMetadata(letter: OpenedLetter | null, url: string): Metadata {
-  if (!letter) notFound();
+export const letterMetadata = (letter: OpenedLetter | null, url: string): Metadata => {
+  if (!letter) {
+    notFound();
+  }
+
   const title = `A letter for ${letter.to}`;
   const media = `/l/${letter.token}`;
   const image = letter.image ? absolute(`${media}/envelope.jpg?v=${letter.image}`) : null;
@@ -46,20 +51,24 @@ export function letterMetadata(letter: OpenedLetter | null, url: string): Metada
             },
           ]
         : undefined,
-      videos: video ? [{ url: video, secureUrl: video, type: "video/mp4", width: 1200, height: 630 }] : undefined,
+      videos: video
+        ? [{ url: video, secureUrl: video, type: "video/mp4", width: 1200, height: 630 }]
+        : undefined,
     },
     twitter: { card: "summary_large_image", title, description },
   };
-}
+};
 
-export function letterViewport(letter: OpenedLetter | null): Viewport {
+export const letterViewport = (letter: OpenedLetter | null): Viewport => {
   const theme = resolveTheme(letter?.theme ?? "keepsake", letter?.style ?? {});
 
   return { themeColor: theme.surface, viewportFit: "cover" };
-}
+};
 
-export function LetterView({ letter }: { letter: OpenedLetter | null }) {
-  if (!letter) notFound();
+export const LetterView = ({ letter }: { letter: OpenedLetter | null }) => {
+  if (!letter) {
+    notFound();
+  }
 
   return <Experience delivery={toDelivery(letter)} />;
-}
+};

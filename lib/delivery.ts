@@ -1,9 +1,11 @@
 import type { Delivery } from "@/components/mail/experience";
-import type { Words } from "@/components/mail/sheet";
 import { seedFrom } from "@/components/mail/seal";
-import { resolveTheme, type Style, type ThemeKey } from "./theme";
+import type { Words } from "@/components/mail/sheet";
 
-export type LetterFields = {
+import { resolveTheme } from "./theme";
+import type { Style, ThemeKey } from "./theme";
+
+export interface LetterFields {
   token: string;
   theme: ThemeKey;
   style: Style | null;
@@ -15,9 +17,9 @@ export type LetterFields = {
   openWhen: string | null;
   sealedAt: number;
   timeZone: string;
-};
+}
 
-function dateParts(at: number, timeZone: string) {
+const dateParts = (at: number, timeZone: string) => {
   const parts = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "long",
@@ -25,12 +27,13 @@ function dateParts(at: number, timeZone: string) {
     timeZone,
   }).formatToParts(at);
 
-  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
 
   return { day: part("day"), month: part("month"), year: part("year") };
-}
+};
 
-export function toDelivery(letter: LetterFields, words?: Words): Delivery {
+export const toDelivery = (letter: LetterFields, words?: Words): Delivery => {
   const { day, month, year } = dateParts(letter.sealedAt, letter.timeZone);
   const short = month.slice(0, 3).toUpperCase();
   const city = letter.city.toUpperCase();
@@ -51,7 +54,9 @@ export function toDelivery(letter: LetterFields, words?: Words): Delivery {
     initial: (letter.initial || letter.from.trim().slice(0, 1) || "S").toUpperCase(),
     arrived: `A LETTER ARRIVED · ${day} ${short}`,
     signedFrom: city ? `from ${letter.from}, sealed in ${letter.city}` : `from ${letter.from}`,
-    sealedLine: city ? `SEALED ${day} ${short} ${year} · ${city}` : `SEALED ${day} ${short} ${year}`,
+    sealedLine: city
+      ? `SEALED ${day} ${short} ${year} · ${city}`
+      : `SEALED ${day} ${short} ${year}`,
     sealedOn: `${day} ${month} ${year}`,
   };
-}
+};

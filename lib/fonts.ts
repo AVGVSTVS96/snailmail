@@ -13,9 +13,20 @@ import {
 } from "next/font/google";
 
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], weight: ["400", "600"] });
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  weight: ["400", "600"],
+});
+
 const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"], weight: "400" });
-const delafield = Mrs_Saint_Delafield({ variable: "--font-delafield", subsets: ["latin"], weight: "400" });
+
+const delafield = Mrs_Saint_Delafield({
+  variable: "--font-delafield",
+  subsets: ["latin"],
+  weight: "400",
+});
 
 const fell = IM_Fell_English({
   variable: "--font-fell",
@@ -54,8 +65,19 @@ const garamond = EB_Garamond({
   preload: false,
 });
 
-const madi = Ms_Madi({ variable: "--font-madi", subsets: ["latin"], weight: "400", preload: false });
-const pinyon = Pinyon_Script({ variable: "--font-pinyon", subsets: ["latin"], weight: "400", preload: false });
+const madi = Ms_Madi({
+  variable: "--font-madi",
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+});
+
+const pinyon = Pinyon_Script({
+  variable: "--font-pinyon",
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+});
 
 export const fontVariables = [
   geist,

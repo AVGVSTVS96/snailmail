@@ -2,9 +2,10 @@
 
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import Link from "next/link";
+
 import { Wordmark } from "./chrome";
 
-export function Nav() {
+export const Nav = () => {
   const { user } = useAuth();
   const letter = (user?.firstName ?? user?.email ?? "").slice(0, 1).toUpperCase();
 
@@ -33,4 +34,4 @@ export function Nav() {
       </div>
     </header>
   );
-}
+};

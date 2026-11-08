@@ -3,10 +3,15 @@ import { promisify } from "node:util";
 
 const [token, ...flags] = process.argv.slice(2);
 
-if (!token) throw new Error("Usage: bun scripts/preview.ts <token> [--prod] [--base http://localhost:3000]");
+if (!token) {
+  throw new Error("Usage: bun scripts/preview.ts <token> [--prod] [--base http://localhost:3000]");
+}
 
 const prod = flags.includes("--prod");
-const base = flags.includes("--base") ? flags[flags.indexOf("--base") + 1] : "http://localhost:3000";
+
+const base = flags.includes("--base")
+  ? flags[flags.indexOf("--base") + 1]
+  : "http://localhost:3000";
 
 const { stdout } = await promisify(execFile)("bunx", [
   "convex",
@@ -21,6 +26,8 @@ const response = await fetch(new URL(`/api/render/${encodeURIComponent(token)}`,
   headers: { Authorization: `Bearer ${stdout.trim()}` },
 });
 
-if (!response.ok) throw new Error(`Render failed with ${response.status}: ${await response.text()}`);
+if (!response.ok) {
+  throw new Error(`Render failed with ${response.status}: ${await response.text()}`);
+}
 
 console.log(await response.json());

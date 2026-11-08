@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+
 import { fontVariables } from "@/lib/fonts";
 import { siteUrl } from "@/lib/site";
+
 import "./globals.css";
 import "./mail.css";
 import "./looks.css";
@@ -17,10 +19,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
-  return (
-    <html lang="en" className={`${fontVariables} antialiased`}>
-      <body>{children}</body>
-    </html>
-  );
-}
+const RootLayout = ({ children }: LayoutProps<"/">) => (
+  <html lang="en" className={`${fontVariables} antialiased`}>
+    <body>{children}</body>
+  </html>
+);
+
+export default RootLayout;

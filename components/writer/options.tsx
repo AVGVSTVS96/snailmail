@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+
 import { Liner } from "@/components/mail/envelope";
 import { Emblem, WaxSeal } from "@/components/mail/seal";
 import { SealedEnvelope } from "@/components/mail/sealed";
@@ -14,16 +15,15 @@ import {
   papers,
   resolveTheme,
   stamps,
-  type Style,
-  type Theme,
   themeKeys,
-  type ThemeKey,
   typefaces,
   waxes,
 } from "@/lib/theme";
+import type { Style, Theme, ThemeKey } from "@/lib/theme";
+
 import { SignaturePad } from "./signature-pad";
 
-export type Fields = {
+export interface Fields {
   theme: ThemeKey;
   style: Style;
   to: string;
@@ -33,32 +33,29 @@ export type Fields = {
   city: string;
   openWhen: string;
   signature: string | null;
-};
+}
 
-type Props = {
+interface Props {
   fields: Fields;
   look: Theme;
   seed: number;
   onTheme: (theme: ThemeKey) => void;
   onStyle: (style: Partial<Style>) => void;
   onField: (field: Partial<Omit<Fields, "theme" | "style">>) => void;
-};
+}
 
-function keysOf<T extends object>(catalog: T) {
+const keysOf = <T extends object>(catalog: T) =>
   // SAFETY: Object.keys of a literal catalog returns exactly its keys
-  return Object.keys(catalog) as Array<keyof T>;
-}
+  Object.keys(catalog) as (keyof T)[];
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="w-section">
-      <h2 className="w-label">{title}</h2>
-      {children}
-    </section>
-  );
-}
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <section className="w-section">
+    <h2 className="w-label">{title}</h2>
+    {children}
+  </section>
+);
 
-function Field({
+const Field = ({
   label,
   value,
   placeholder,
@@ -70,7 +67,7 @@ function Field({
   placeholder?: string;
   max: number;
   onChange: (value: string) => void;
-}) {
+}) => {
   const id = useId();
 
   return (
@@ -81,13 +78,15 @@ function Field({
         value={value}
         placeholder={placeholder}
         maxLength={max}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
       />
     </div>
   );
-}
+};
 
-function Segments<K extends string>({
+const Segments = <K extends string>({
   options,
   value,
   onChange,
@@ -97,26 +96,26 @@ function Segments<K extends string>({
   value: K;
   onChange: (value: K) => void;
   label: string;
-}) {
-  return (
-    <div className="w-segments" role="radiogroup" aria-label={label}>
-      {keysOf(options).map((key) => (
-        <button
-          key={key}
-          type="button"
-          role="radio"
-          aria-checked={key === value}
-          className={key === value ? "w-on" : ""}
-          onClick={() => onChange(key)}
-        >
-          {options[key]}
-        </button>
-      ))}
-    </div>
-  );
-}
+}) => (
+  <div className="w-segments" role="radiogroup" aria-label={label}>
+    {keysOf(options).map((key) => (
+      <button
+        key={key}
+        type="button"
+        role="radio"
+        aria-checked={key === value}
+        className={key === value ? "w-on" : ""}
+        onClick={() => {
+          onChange(key);
+        }}
+      >
+        {options[key]}
+      </button>
+    ))}
+  </div>
+);
 
-export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props) {
+export const Options = ({ fields, look, seed, onTheme, onStyle, onField }: Props) => {
   const { style } = look;
   const initial = (fields.initial || fields.from.slice(0, 1) || "S").toUpperCase();
 
@@ -134,7 +133,9 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
                 role="radio"
                 aria-checked={fields.theme === key}
                 className={`w-theme ${fields.theme === key ? "w-on" : ""}`}
-                onClick={() => onTheme(key)}
+                onClick={() => {
+                  onTheme(key);
+                }}
               >
                 <span className="w-theme-desk" style={{ background: theme.surface }}>
                   <SealedEnvelope theme={theme} from={null} initial={initial} seed={seed} />
@@ -147,28 +148,50 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
       </Section>
 
       <Section title="Envelope">
-        <Field label="To" value={fields.to} placeholder="June" max={60} onChange={(to) => onField({ to })} />
+        <Field
+          label="To"
+          value={fields.to}
+          placeholder="June"
+          max={60}
+          onChange={(to) => {
+            onField({ to });
+          }}
+        />
         <Field
           label="Address line"
           value={fields.toPlace}
           placeholder="Brooklyn, New York"
           max={80}
-          onChange={(toPlace) => onField({ toPlace })}
+          onChange={(toPlace) => {
+            onField({ toPlace });
+          }}
         />
-        <Field label="From" value={fields.from} placeholder="Avery" max={60} onChange={(from) => onField({ from })} />
+        <Field
+          label="From"
+          value={fields.from}
+          placeholder="Avery"
+          max={60}
+          onChange={(from) => {
+            onField({ from });
+          }}
+        />
         <Field
           label="Postmark city"
           value={fields.city}
           placeholder="San Francisco"
           max={40}
-          onChange={(city) => onField({ city })}
+          onChange={(city) => {
+            onField({ city });
+          }}
         />
         <Field
           label="Open when…"
           value={fields.openWhen}
           placeholder="you have a quiet minute"
           max={40}
-          onChange={(openWhen) => onField({ openWhen })}
+          onChange={(openWhen) => {
+            onField({ openWhen });
+          }}
         />
       </Section>
 
@@ -184,7 +207,9 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
               title={papers[key].name}
               className={`w-swatch ${style.paper === key ? "w-on" : ""}`}
               style={{ background: papers[key].color }}
-              onClick={() => onStyle({ paper: key })}
+              onClick={() => {
+                onStyle({ paper: key });
+              }}
             />
           ))}
         </div>
@@ -192,7 +217,9 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
           label="Paper finish"
           options={finishes}
           value={style.finish}
-          onChange={(finish) => onStyle({ finish })}
+          onChange={(finish) => {
+            onStyle({ finish });
+          }}
         />
       </Section>
 
@@ -212,7 +239,9 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
                 disabled={!fits}
                 className={`w-swatch ${style.ink === key ? "w-on" : ""}`}
                 style={{ background: inks[key].color }}
-                onClick={() => onStyle({ ink: key })}
+                onClick={() => {
+                  onStyle({ ink: key });
+                }}
               />
             );
           })}
@@ -228,7 +257,9 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
               role="radio"
               aria-checked={style.typeface === key}
               className={`w-face ${style.typeface === key ? "w-on" : ""}`}
-              onClick={() => onStyle({ typeface: key })}
+              onClick={() => {
+                onStyle({ typeface: key });
+              }}
             >
               <span className="w-face-aa" style={{ fontFamily: typefaces[key].font }}>
                 Aa
@@ -245,7 +276,9 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
           label="Signature"
           options={{ script: "Script", drawn: "Draw your own" }}
           value={fields.signature === null ? "script" : "drawn"}
-          onChange={(kind) => onField({ signature: kind === "script" ? null : "" })}
+          onChange={(kind) => {
+            onField({ signature: kind === "script" ? null : "" });
+          }}
         />
         {fields.signature === null ? (
           <div
@@ -262,7 +295,9 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
           <SignaturePad
             value={fields.signature || null}
             ink={look.ink}
-            onChange={(signature) => onField({ signature: signature ?? "" })}
+            onChange={(signature) => {
+              onField({ signature: signature ?? "" });
+            }}
           />
         )}
       </Section>
@@ -278,9 +313,15 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
               aria-label={waxes[key].name}
               title={waxes[key].name}
               className={`w-seal ${style.wax === key ? "w-on" : ""}`}
-              onClick={() => onStyle({ wax: key })}
+              onClick={() => {
+                onStyle({ wax: key });
+              }}
             >
-              <WaxSeal theme={resolveTheme(fields.theme, { ...style, wax: key })} initial={initial} seed={seed} />
+              <WaxSeal
+                theme={resolveTheme(fields.theme, { ...style, wax: key })}
+                initial={initial}
+                seed={seed}
+              />
             </button>
           ))}
         </div>
@@ -294,7 +335,9 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
               aria-label={emblems[key]}
               title={emblems[key]}
               className={`w-emblem ${style.emblem === key ? "w-on" : ""}`}
-              onClick={() => onStyle({ emblem: key })}
+              onClick={() => {
+                onStyle({ emblem: key });
+              }}
             >
               {key === "initial" ? (
                 <span className="font-fell">{initial}</span>
@@ -312,7 +355,9 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
             value={fields.initial}
             placeholder={fields.from.slice(0, 1).toUpperCase() || "A"}
             max={1}
-            onChange={(value) => onField({ initial: value.toUpperCase() })}
+            onChange={(value) => {
+              onField({ initial: value.toUpperCase() });
+            }}
           />
         )}
       </Section>
@@ -328,10 +373,17 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
               aria-label={`${stamps[key].name}, ${stamps[key].caption}`}
               title={`${stamps[key].name} · ${stamps[key].caption}`}
               className={`w-stamp ${style.stamp === key ? "w-on" : ""}`}
-              onClick={() => onStyle({ stamp: key })}
+              onClick={() => {
+                onStyle({ stamp: key });
+              }}
             >
               <svg viewBox="-2 -2 64 76">
-                <Stamp theme={{ ...resolveTheme(fields.theme, { ...style, stamp: key }), envelope: "#FFFFFF" }} />
+                <Stamp
+                  theme={{
+                    ...resolveTheme(fields.theme, { ...style, stamp: key }),
+                    envelope: "#FFFFFF",
+                  }}
+                />
               </svg>
             </button>
           ))}
@@ -346,16 +398,28 @@ export function Options({ fields, look, seed, onTheme, onStyle, onField }: Props
               theme={resolveTheme(fields.theme, { ...style, liner: key })}
               label={liners[key]}
               on={style.liner === key}
-              onPick={() => onStyle({ liner: key })}
+              onPick={() => {
+                onStyle({ liner: key });
+              }}
             />
           ))}
         </div>
       </Section>
     </div>
   );
-}
+};
 
-function LinerSwatch({ theme, label, on, onPick }: { theme: Theme; label: string; on: boolean; onPick: () => void }) {
+const LinerSwatch = ({
+  theme,
+  label,
+  on,
+  onPick,
+}: {
+  theme: Theme;
+  label: string;
+  on: boolean;
+  onPick: () => void;
+}) => {
   const id = useId();
 
   return (
@@ -372,8 +436,12 @@ function LinerSwatch({ theme, label, on, onPick }: { theme: Theme; label: string
         <defs>
           <Liner id={id} theme={theme} />
         </defs>
-        <rect width="46" height="46" fill={theme.style.liner === "none" ? "#F4F2EE" : `url(#${id})`} />
+        <rect
+          width="46"
+          height="46"
+          fill={theme.style.liner === "none" ? "#F4F2EE" : `url(#${id})`}
+        />
       </svg>
     </button>
   );
-}
+};

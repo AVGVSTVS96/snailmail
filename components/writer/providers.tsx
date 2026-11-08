@@ -1,23 +1,31 @@
 "use client";
 
 import { AuthKitProvider, useAccessToken, useAuth } from "@workos-inc/authkit-nextjs/components";
-import { Authenticated, AuthLoading, ConvexProviderWithAuth, ConvexReactClient, Unauthenticated } from "convex/react";
+import {
+  Authenticated,
+  AuthLoading,
+  ConvexProviderWithAuth,
+  ConvexReactClient,
+  Unauthenticated,
+} from "convex/react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+
 import type { Hosts } from "@/lib/links";
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
 const Links = createContext<Hosts>({ root: null, site: "" });
 
-export function useHosts() {
-  return useContext(Links);
-}
+export const useHosts = () => useContext(Links);
 
-function useConvexAuthFromAuthKit() {
+const useConvexAuthFromAuthKit = () => {
   const { user, loading } = useAuth();
   const { getAccessToken, refresh } = useAccessToken();
 
   const fetchAccessToken = useCallback(
     async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
-      if (!user) return null;
+      if (!user) {
+        return null;
+      }
 
       try {
         return (forceRefreshToken ? await refresh() : await getAccessToken()) ?? null;
@@ -29,17 +37,17 @@ function useConvexAuthFromAuthKit() {
   );
 
   return { isLoading: loading, isAuthenticated: Boolean(user), fetchAccessToken };
-}
+};
 
-function SignInAgain() {
+const SignInAgain = () => {
   useEffect(() => {
     location.assign(`/sign-in?next=${encodeURIComponent(location.pathname)}`);
   }, []);
 
   return <div className="writer w-loading" />;
-}
+};
 
-export function WriterProviders({ children, hosts }: { children: ReactNode; hosts: Hosts }) {
+export const WriterProviders = ({ children, hosts }: { children: ReactNode; hosts: Hosts }) => {
   const [convex] = useState(() => new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL ?? ""));
 
   return (
@@ -57,4 +65,4 @@ export function WriterProviders({ children, hosts }: { children: ReactNode; host
       </ConvexProviderWithAuth>
     </AuthKitProvider>
   );
-}
+};

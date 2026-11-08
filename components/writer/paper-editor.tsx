@@ -1,96 +1,133 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+
 import { paragraphs } from "@/components/mail/sheet";
 
-function escape(text: string) {
-  return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-}
+const escape = (text: string) =>
+  text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
-function toHtml(body: string) {
+const toHtml = (body: string) => {
   const blocks = paragraphs(body).map(
     (p) =>
       `<p>${escape(p)
-        .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
-        .replace(/\*([^*]+)\*/g, "<i>$1</i>")
+        .replaceAll(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+        .replaceAll(/\*([^*]+)\*/g, "<i>$1</i>")
         .replaceAll("\n", "<br>")}</p>`,
   );
 
   return blocks.length ? blocks.join("") : "<p><br></p>";
-}
+};
 
-function inlineText(node: Node): string {
-  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
+const inlineText = (node: Node): string => {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent ?? "";
+  }
 
-  if (!(node instanceof HTMLElement)) return "";
+  if (!(node instanceof HTMLElement)) {
+    return "";
+  }
 
-  if (node.tagName === "BR") return "\n";
+  if (node.tagName === "BR") {
+    return "\n";
+  }
+
   const inner = Array.from(node.childNodes, inlineText).join("");
 
-  if (inner.trim() === "") return inner;
+  if (inner.trim() === "") {
+    return inner;
+  }
+
   const weight = node.style.fontWeight;
-  const bold = node.tagName === "B" || node.tagName === "STRONG" || weight === "bold" || Number(weight) >= 600;
+
+  const bold =
+    node.tagName === "B" || node.tagName === "STRONG" || weight === "bold" || Number(weight) >= 600;
+
   const italic = node.tagName === "I" || node.tagName === "EM" || node.style.fontStyle === "italic";
 
-  if (bold) return `**${inner}**`;
+  if (bold) {
+    return `**${inner}**`;
+  }
 
-  if (italic) return `*${inner}*`;
+  if (italic) {
+    return `*${inner}*`;
+  }
 
   return inner;
-}
+};
 
-function toBody(root: HTMLElement) {
+const toBody = (root: HTMLElement) => {
   const blocks: string[] = [];
   let loose = "";
 
-  for (const node of Array.from(root.childNodes)) {
+  for (const node of [...root.childNodes]) {
     const block = node instanceof HTMLElement && (node.tagName === "P" || node.tagName === "DIV");
 
     if (block) {
-      if (loose.trim()) blocks.push(loose);
+      if (loose.trim()) {
+        blocks.push(loose);
+      }
+
       loose = "";
       blocks.push(inlineText(node));
-    } else loose += inlineText(node);
+    } else {
+      loose += inlineText(node);
+    }
   }
 
-  if (loose.trim()) blocks.push(loose);
+  if (loose.trim()) {
+    blocks.push(loose);
+  }
 
   return blocks
     .flatMap((block) => {
-      const clean = block.replace(/\n+$/, "").replaceAll("\u00a0", " ");
+      const clean = block.replace(/\n+$/, "").replaceAll("\u00A0", " ");
 
       return clean.trim() === "" ? [] : [clean];
     })
     .join("\n\n");
-}
+};
 
-export function words(body: string) {
-  return body.split(/\s+/).filter((word) => /\w/.test(word)).length;
-}
+export const words = (body: string) => body.split(/\s+/).filter((word) => /\w/.test(word)).length;
 
-export function PaperEditor({ body, onChange }: { body: string; onChange: (body: string) => void }) {
+export const PaperEditor = ({
+  body,
+  onChange,
+}: {
+  body: string;
+  onChange: (body: string) => void;
+}) => {
   const editor = useRef<HTMLDivElement>(null);
   const last = useRef(body);
 
   useEffect(() => {
     const element = editor.current;
 
-    if (!element || body === last.current) return;
+    if (!element || body === last.current) {
+      return;
+    }
+
     last.current = body;
     element.innerHTML = toHtml(body);
   }, [body]);
 
   useEffect(() => {
-    if (editor.current) editor.current.innerHTML = toHtml(last.current);
+    if (editor.current) {
+      editor.current.innerHTML = toHtml(last.current);
+    }
+
     document.execCommand("styleWithCSS", false, "false");
     document.execCommand("defaultParagraphSeparator", false, "p");
   }, []);
 
-  function changed() {
-    if (!editor.current) return;
+  const changed = () => {
+    if (!editor.current) {
+      return;
+    }
+
     last.current = toBody(editor.current);
     onChange(last.current);
-  }
+  };
 
   return (
     <div
@@ -104,12 +141,20 @@ export function PaperEditor({ body, onChange }: { body: string; onChange: (body:
       spellCheck
       onInput={changed}
       onKeyDown={(event) => {
-        if (!(event.metaKey || event.ctrlKey)) return;
+        if (!(event.metaKey || event.ctrlKey)) {
+          return;
+        }
+
         const key = event.key.toLowerCase();
 
-        if (key === "u") event.preventDefault();
+        if (key === "u") {
+          event.preventDefault();
+        }
 
-        if (key !== "b" && key !== "i") return;
+        if (key !== "b" && key !== "i") {
+          return;
+        }
+
         event.preventDefault();
         document.execCommand(key === "b" ? "bold" : "italic");
         changed();
@@ -127,4 +172,4 @@ export function PaperEditor({ body, onChange }: { body: string; onChange: (body:
       }}
     />
   );
-}
+};

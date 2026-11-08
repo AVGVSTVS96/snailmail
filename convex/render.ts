@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+
 import { internalAction, mutation } from "./_generated/server";
 import { authorize, serverSecret } from "./secret";
 
@@ -21,9 +22,16 @@ export const attach = mutation({
       .withIndex("by_token", (q) => q.eq("token", token))
       .unique();
 
-    if (!letter) throw new Error("No letter with that token");
+    if (!letter) {
+      throw new Error("No letter with that token");
+    }
 
-    for (const old of [letter.image, letter.video]) if (old) await ctx.storage.delete(old);
+    for (const old of [letter.image, letter.video]) {
+      if (old) {
+        await ctx.storage.delete(old);
+      }
+    }
+
     await ctx.db.patch(letter._id, { image, video });
   },
 });
@@ -33,14 +41,18 @@ export const request = internalAction({
   handler: async (_ctx, { token }) => {
     const site = process.env.SNAILMAIL_SITE_URL;
 
-    if (!site) throw new Error("SNAILMAIL_SITE_URL is not set");
+    if (!site) {
+      throw new Error("SNAILMAIL_SITE_URL is not set");
+    }
 
     const response = await fetch(new URL(`/api/render/${encodeURIComponent(token)}`, site), {
       method: "POST",
       headers: { Authorization: `Bearer ${serverSecret()}` },
     });
 
-    if (!response.ok) throw new Error(`Render failed with ${response.status}: ${await response.text()}`);
+    if (!response.ok) {
+      throw new Error(`Render failed with ${response.status}: ${await response.text()}`);
+    }
 
     return await response.json();
   },
