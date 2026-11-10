@@ -25,12 +25,12 @@ A letter, sent as a link, that opens like real mail. Next 16 + Convex on Vercel,
 
 ## Rules and what enforces them
 
-| Rule                                                                                   | Enforced by                                    |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `lib/` never imports `components/` or `app/`                                           | `oxlint.config.ts` override                    |
-| No raw effects: derive in render, act in handlers, the named hooks in `lib/outside.ts` | `oxlint.config.ts`                             |
-| No comments, `as` or `any`; outside input (JSON, env, ids) is parsed where it arrives  | `oxlint.config.ts`, zod, Convex validators     |
-| The Chromium/ffmpeg path and the render secret never reach a client bundle             | `import "server-only"` in film, letters, media |
+| Rule                                                                                                                                                              | Enforced by                                    |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `lib/` never imports `components/` or `app/`                                                                                                                      | `oxlint.config.ts` override                    |
+| No raw effects: derive in render, act in handlers, the named hooks in `lib/outside.ts`                                                                            | `oxlint.config.ts`                             |
+| No `as` or `any`; comments only for a decision or fact the code can't show (one `WHY:` line or a link); outside input (JSON, env, ids) is parsed where it arrives | `oxlint.config.ts`, zod, Convex validators     |
+| The Chromium/ffmpeg path and the render secret never reach a client bundle                                                                                        | `import "server-only"` in film, letters, media |
 
 ## Privacy
 
